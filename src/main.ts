@@ -5,6 +5,8 @@ import { Render } from "./render";
 
 // Criar a cena
 const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x1b77f3); // Azul claro (cor do céu)
+
 
 // Cria Luz Ambiente
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.05); // Cor branca, intensidade 0.5
@@ -24,7 +26,7 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 Render.set(renderer, scene, camera);
 
 
-const board:Board = new Board(scene, renderer);
+const board:Board = new Board(scene);
 const boardObject:THREE.Object3D = board.create(5);
 
 
@@ -57,14 +59,20 @@ window.addEventListener("resize", () => {
 
 
 
-const control:Control = new Control(scene, renderer, camera, boardObject);
+board.addObject({
+    color:0x00ff00,
+    position: { x: 0, y: 2, z: 0 }
+})
+
+const control:Control = new Control(scene, camera, boardObject);
+board.add(control.selector);
 window.addEventListener("click",    (event) => control.onMouseClick(event));
-window.addEventListener("mouseup",  (event) => control.onMouseUp(event));
+window.addEventListener("mouseup",  (/*event*/) => control.onMouseUp(/*event*/));
 window.addEventListener("mousedown",(event) => control.onMouseDown(event));
 window.addEventListener("mousemove",(event) => control.onMouseMove(event));
 window.addEventListener("wheel",    (event) => control.onMouseWheel(event));
 
-control.method = (object:THREE.Object3D) => {
+/*control.method = (object:THREE.Object3D) => {
     const mesh = object as THREE.Mesh;
     let count = 15;
     const steps = 10;
@@ -86,19 +94,38 @@ control.method = (object:THREE.Object3D) => {
         Render.render();
     }
     anim(1);
+};*/
 
-    /*setTimeout(() => {
-        mesh.material = originalMaterial;
-        object.castShadow = true;
 
-        Render();
-    }, 200);*/
+
+
+
+function CriarPokemon() {
+    const geometry = new THREE.BoxGeometry(.5, .5, .5);
+    const material = new THREE.MeshStandardMaterial({ color: 0xffffff });
+    const sprite = new THREE.Mesh(geometry, material);
+    sprite.castShadow = true;
+    sprite.receiveShadow = true;
+    sprite.position.y = 1 - (0.5/2);
+    const pokemon = new THREE.Group();
+    pokemon.add(sprite);
+
+    pokemon.raycast = () => {}
+    sprite.raycast = () => {}
+
+    return pokemon;
+}
+
+// Criar geometria e material
+const pokemon = CriarPokemon();
+board.add(pokemon);
+
+
+control.method = (object:THREE.Object3D) => {    
+    pokemon.position.set(
+        object.position.x,
+        object.position.y,
+        object.position.z
+    );    
+    Render.render();
 };
-
-
-board.addObject({
-    color:0x00ff00,
-    position: { x: 0, y: 2, z: 0 }
-})
-
-board.add(control.selector);

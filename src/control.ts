@@ -1,5 +1,4 @@
 import * as THREE from "three";
-import { color } from "three/tsl";
 import { Render } from "./render";
 
 
@@ -9,21 +8,20 @@ export class Control {
     private raycaster:THREE.Raycaster  = new THREE.Raycaster();
     private mouse = new THREE.Vector2();
     private isMouseDown = false;
+    private isDragging:boolean = false;
     private lastX = 0;
     private lastY = 0;
     private board:THREE.Object3D;
     public selector:THREE.Object3D;
     public selected:THREE.Object3D|null = null;
-    private renderer:THREE.WebGLRenderer;
 
 
     public method:Function = (param:any) => {console.log(param)};
 
-    constructor(scene:THREE.Scene, renderer:THREE.WebGLRenderer, camera:THREE.PerspectiveCamera, board:THREE.Object3D) {
+    constructor(scene:THREE.Scene, camera:THREE.PerspectiveCamera, board:THREE.Object3D) {
         this.scene = scene;
         this.camera = camera;
         this.board = board;
-        this.renderer = renderer;
 
 
         const material:THREE.MeshBasicMaterial =  new THREE.MeshBasicMaterial({   
@@ -31,7 +29,7 @@ export class Control {
                 transparent: true, 
                 opacity: 0.5 // Define a transparência (0 = invisível, 1 = opaco)
             });
-        const geometry = new THREE.PlaneGeometry(1, 1);
+        const geometry = new THREE.PlaneGeometry(1.03, 1.03);
         
         this.selector = new THREE.Mesh(geometry, material);
         this.selector.rotation.x = -Math.PI / 2;
@@ -44,6 +42,9 @@ export class Control {
 
     // Função para detectar clique
     public onMouseClick(event: MouseEvent) {
+        if(this.isDragging)
+            return;
+
         const object:THREE.Object3D|null = this.rayCast(event);
         if (object != null)
             this.method(object);        
@@ -69,13 +70,15 @@ export class Control {
         this.isMouseDown = true;
         this.lastX = event.clientX;
         this.lastY = event.clientY;
+        this.isDragging = false;
     }
-    public onMouseUp(event:MouseEvent) {
+    public onMouseUp(/*event:MouseEvent*/) {
         this.isMouseDown = false;
     }
 
     public onMouseMove(event:MouseEvent) {
-        if (this.isMouseDown) {            
+        if (this.isMouseDown) {
+            this.isDragging = true;
             const deltaX = this.lastX-event.clientX;
             const deltaY = this.lastY-event.clientY;
             this.board.rotation.y -= deltaX * 0.005;

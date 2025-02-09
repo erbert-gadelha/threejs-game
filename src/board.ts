@@ -1,16 +1,13 @@
 import * as THREE from "three";
-import { color } from "three/tsl";
 import { Render } from "./render";
 
 
 export class  Board {
     private scene:THREE.Scene;
-    private renderer:THREE.WebGLRenderer;
     private object:THREE.Object3D = new THREE.Object3D();
 
-    constructor(scene:THREE.Scene,  renderer:THREE.WebGLRenderer) {
+    constructor(scene:THREE.Scene) {
         this.scene = scene;
-        this.renderer = renderer;
     }
     
     public add(object:THREE.Object3D) {
