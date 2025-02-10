@@ -34,8 +34,8 @@ export class Control {
         this.selector = new THREE.Mesh(geometry, material);
         this.selector.rotation.x = -Math.PI / 2;
         this.selector.position.set(0,0.5001,0);
-        //this.selector.layers.set(1);
         this.selector.raycast = () => {};
+        this.selector.visible = false;
 
     }
 

@@ -9,15 +9,15 @@ export class  Board {
     constructor(scene:THREE.Scene) {
         this.scene = scene;
     }
-    
-    public add(object:THREE.Object3D) {
-        this.object.add(object);
-        this.render();
-    }
 
 
     private render():void {
         Render.render();
+    }
+    
+    public add(object:THREE.Object3D) {
+        this.object.add(object);
+        this.render();
     }
 
     public addObject(object:any) {
@@ -34,10 +34,9 @@ export class  Board {
 
         cube.position.set(object.position.x, object.position.y, object.position.z);
         cube.material.color.setHex(object?.color);
-
         
-        cube.castShadow = true; //default is false
-        cube.receiveShadow = false; //default
+        cube.castShadow = true;
+        cube.receiveShadow = true;
         
         this.object.add(cube);
         this.render();
@@ -84,6 +83,8 @@ export class  Board {
         
         this.object.add(directionalLight);
         this.scene.add(this.object);
+        this.object.rotation.x = 45 * (Math.PI/360);
+        this.object.rotation.y = 30 * (Math.PI/360);
         return this.object;
     }
 }

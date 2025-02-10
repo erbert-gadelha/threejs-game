@@ -121,11 +121,51 @@ const pokemon = CriarPokemon();
 board.add(pokemon);
 
 
-control.method = (object:THREE.Object3D) => {    
-    pokemon.position.set(
-        object.position.x,
-        object.position.y,
-        object.position.z
-    );    
-    Render.render();
+
+
+let running_anim:Promise<void>|null = null;
+
+control.method = async (object:THREE.Object3D) => {
+    if(running_anim != null)
+        return;
+    running_anim = moveTo(pokemon, object.position.clone());
 };
+
+
+async function moveTo (object:THREE.Object3D, position:THREE.Vector3):Promise<void> {
+
+    const delta = position.clone().sub(object.position).normalize();
+    const velocity = 3; // 1 block per second
+    let vel_ = 0;
+
+    const moveTo_anim = async () => {
+        const distance = position.distanceTo(object.position);
+        if(distance <= 0.05) {
+            console.log("chegou!")
+            object.position.set(position.x, position.y, position.z);
+            running_anim = null;
+            Render.render();
+            return;
+        }
+
+        requestAnimationFrame(() => moveTo_anim());
+
+        if(distance > 0.75) {
+            vel_ = Math.min(vel_ + 0.15, velocity);
+        } else if (distance < 0.25) {
+            vel_ = Math.max(vel_ - 0.25, 0.05);
+        } else {
+            vel_ = velocity;
+        }
+
+        /*object.position.x += (delta.x)*(velocity/60);
+        object.position.y += (delta.y)*(velocity/60);
+        object.position.z += (delta.z)*(velocity/60);*/
+        object.position.x += (delta.x)*(vel_/60);
+        object.position.y += (delta.y)*(vel_/60);
+        object.position.z += (delta.z)*(vel_/60);
+        Render.render();
+    }
+
+    await moveTo_anim();
+}
