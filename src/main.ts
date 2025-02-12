@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { Board } from "./board";
 import { Control } from "./control";
 import { Render } from "./render";
+import Navigation from "./navigation";
 
 // Criar a cena
 const scene = new THREE.Scene();
@@ -29,20 +30,14 @@ Render.set(renderer, scene, camera);
 const board:Board = new Board(scene);
 const boardObject:THREE.Object3D = board.create(5);
 
+const navigation:Navigation = new Navigation(board);
 
-/*function render() {
-    renderer.render(scene, camera);
-}*/
 
-// Animação
-/*function animate(mesh:THREE.Object3D) {
-    requestAnimationFrame(() => animate(mesh));
-    //mesh.rotation.x += 0.01;
-    mesh.rotation.y += 0.01;
-    Render.render();
-}
-animate(boardObject);*/
-//render();
+
+//navigation.set(board);
+navigation.findPath(boardObject, boardObject);
+
+
 Render.render();
 
 
@@ -71,31 +66,6 @@ window.addEventListener("mouseup",  (/*event*/) => control.onMouseUp(/*event*/))
 window.addEventListener("mousedown",(event) => control.onMouseDown(event));
 window.addEventListener("mousemove",(event) => control.onMouseMove(event));
 window.addEventListener("wheel",    (event) => control.onMouseWheel(event));
-
-/*control.method = (object:THREE.Object3D) => {
-    const mesh = object as THREE.Mesh;
-    let count = 15;
-    const steps = 10;
-
-    const anim = (fade:number) => {
-        if(fade > 0) {
-            count++;
-            object.material.emissiveIntensity = count/steps;
-            if(count < steps)
-                requestAnimationFrame(()=>anim(1));
-            else
-                requestAnimationFrame(()=>anim(-1));
-        } else {
-            count--;
-            object.material.emissiveIntensity = count/steps;
-            if(count > 0)
-                requestAnimationFrame(()=>anim(-1));
-        }
-        Render.render();
-    }
-    anim(1);
-};*/
-
 
 
 
