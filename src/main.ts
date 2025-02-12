@@ -126,6 +126,7 @@ board.add(pokemon);
 let running_anim:Promise<void>|null = null;
 
 control.method = async (object:THREE.Object3D) => {
+    console.log(running_anim);
     if(running_anim != null)
         return;
     running_anim = moveTo(pokemon, object.position.clone());
@@ -143,8 +144,9 @@ async function moveTo (object:THREE.Object3D, position:THREE.Vector3):Promise<vo
         if(distance <= 0.05) {
             console.log("chegou!")
             object.position.set(position.x, position.y, position.z);
-            running_anim = null;
             Render.render();
+            running_anim = null;
+            setTimeout(()=>running_anim=null, 20);
             return;
         }
 
@@ -157,10 +159,7 @@ async function moveTo (object:THREE.Object3D, position:THREE.Vector3):Promise<vo
         } else {
             vel_ = velocity;
         }
-
-        /*object.position.x += (delta.x)*(velocity/60);
-        object.position.y += (delta.y)*(velocity/60);
-        object.position.z += (delta.z)*(velocity/60);*/
+        
         object.position.x += (delta.x)*(vel_/60);
         object.position.y += (delta.y)*(vel_/60);
         object.position.z += (delta.z)*(vel_/60);
