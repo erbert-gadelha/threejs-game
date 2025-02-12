@@ -126,7 +126,6 @@ board.add(pokemon);
 let running_anim:Promise<void>|null = null;
 
 control.method = async (object:THREE.Object3D) => {
-    console.log(running_anim);
     if(running_anim != null)
         return;
     running_anim = moveTo(pokemon, object.position.clone());
