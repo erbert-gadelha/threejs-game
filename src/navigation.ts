@@ -86,7 +86,6 @@ export default class Navigation {
             }
         ]
 
-
         dijkstra.sort((a:Dijkstra, b:Dijkstra) => {
             return a.distance - b.distance;
         })
