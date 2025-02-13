@@ -48,25 +48,36 @@ window.addEventListener("resize", () => {
 
 
 board.addBlock({
-    color:0x00ff00,
-    position: { x: 2, y: 1, z: 1 }
+    color:0xffff00,
+    position: { x: 1, y: 1, z: 1 }
+})
+
+board.addBlock({
+    color:0x0000ff,
+    position: { x: 0, y: 2, z: 1 }
 })
 
 board.addBlock({
     color:0x00ff00,
-    position: { x: 1, y: 2, z: 1 }
+    position: { x: 0, y: 2, z: 0 }
+})
+board.addBlock({
+    color:0xff0000,
+    position: { x: 0, y: 2, z: -1 }
 })
 
 board.addBlock({
-    color:0x00ff00,
-    position: { x: 1, y: 2, z: 0 }
-})
-board.addBlock({
-    color:0x00ff00,
-    position: { x: 1, y: 2, z: -1 }
+    color:0x0000ff,
+    position: { x: -1, y: 1, z: -1 }
 })
 
-board.removeBlock({position: { x: 2, y: 0, z: 1 }});
+board.removeBlock({position: { x: -1, y: 0, z: -1 }});
+board.removeBlock({position: { x: 1, y: 0, z: 1 }});
+board.removeBlock({position: { x: 0, y: 0, z: -2 }});
+board.removeBlock({position: { x: 0, y: 0, z: -1 }});
+board.removeBlock({position: { x: 0, y: 0, z:  0 }});
+board.removeBlock({position: { x: 0, y: 0, z:  1 }});
+board.removeBlock({position: { x: 0, y: 0, z:  2 }});
 
 
 
@@ -81,25 +92,27 @@ window.addEventListener("wheel",    (event) => control.onMouseWheel(event));
 
 
 
-function CriarPokemon() {
+function createPlayer() {
     const geometry = new THREE.BoxGeometry(.5, .5, .5);
     const material = new THREE.MeshStandardMaterial({ color: 0xffffff });
     const sprite = new THREE.Mesh(geometry, material);
     sprite.castShadow = true;
     sprite.receiveShadow = true;
     sprite.position.y = 1 - (0.5/2);
-    const pokemon = new THREE.Group();
-    pokemon.add(sprite);
 
-    pokemon.raycast = () => {}
+    const player_ = new THREE.Group();
+    
+    player_.add(sprite);
+    player_.position.set(0,2,0)
+    player_.raycast = () => {}
     sprite.raycast = () => {}
 
-    return pokemon;
+    return player_;
 }
 
 // Criar geometria e material
-const pokemon = CriarPokemon();
-board.add(pokemon);
+const player = createPlayer();
+board.add(player);
 
 
 
@@ -113,8 +126,8 @@ control.method = async (object:THREE.Object3D) => {
     if(running_anim != null)
         return;
 
-    const path = navigation.findPath(pokemon.position.clone(), object.position.clone());
-    running_anim =  moveTo(pokemon, path);
+    const path = navigation.findPath(player.position.clone(), object.position.clone());
+    running_anim =  moveTo(player, path);
 };
 
 
@@ -131,7 +144,7 @@ async function moveTo (object:THREE.Object3D, path:THREE.Vector3[]):Promise<void
     let from = path[i];
     let to = path[i+1];
 
-    let delta = to.clone().sub(from).normalize();
+    let delta = to.clone().sub(from).normalize().multiplyScalar(velocity/60);
 
     const moveTo_anim = () => {
         if(i > path.length) {
@@ -148,12 +161,11 @@ async function moveTo (object:THREE.Object3D, path:THREE.Vector3[]):Promise<void
             if(++i < path.length-1) {
                 from = path[i];
                 to = path[i+1];
-                delta = to.clone().sub(from).normalize();
+                
+                delta = to.clone().sub(from).normalize().multiplyScalar(velocity/60);
             }
-        } else {            
-            object.position.x += (delta.x)*(velocity/60);
-            object.position.y += (delta.y)*(velocity/60);
-            object.position.z += (delta.z)*(velocity/60);
+        } else {
+            object.position.add(delta);
             Render.render();
         }        
         requestAnimationFrame(() => moveTo_anim());        
