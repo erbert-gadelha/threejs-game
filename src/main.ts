@@ -30,12 +30,6 @@ Render.set(renderer, scene, camera);
 const board:Board = new Board(scene);
 const boardObject:THREE.Object3D = board.create(5);
 
-const navigation:Navigation = new Navigation(board);
-
-
-
-//navigation.set(board);
-navigation.findPath(boardObject, boardObject);
 
 
 Render.render();
@@ -53,11 +47,28 @@ window.addEventListener("resize", () => {
 });
 
 
-
-board.addObject({
+board.addBlock({
     color:0x00ff00,
-    position: { x: 0, y: 2, z: 0 }
+    position: { x: 2, y: 1, z: 1 }
 })
+
+board.addBlock({
+    color:0x00ff00,
+    position: { x: 1, y: 2, z: 1 }
+})
+
+board.addBlock({
+    color:0x00ff00,
+    position: { x: 1, y: 2, z: 0 }
+})
+board.addBlock({
+    color:0x00ff00,
+    position: { x: 1, y: 2, z: -1 }
+})
+
+board.removeBlock({position: { x: 2, y: 0, z: 1 }});
+
+
 
 const control:Control = new Control(scene, camera, boardObject);
 board.add(control.selector);
@@ -95,45 +106,64 @@ board.add(pokemon);
 
 let running_anim:Promise<void>|null = null;
 
+
+const navigation:Navigation = new Navigation(board);
+
 control.method = async (object:THREE.Object3D) => {
     if(running_anim != null)
         return;
-    running_anim = moveTo(pokemon, object.position.clone());
+
+    const path = navigation.findPath(pokemon.position.clone(), object.position.clone());
+    running_anim =  moveTo(pokemon, path);
 };
 
 
-async function moveTo (object:THREE.Object3D, position:THREE.Vector3):Promise<void> {
-
-    const delta = position.clone().sub(object.position).normalize();
-    const velocity = 3; // 1 block per second
-    let vel_ = 0;
-
-    const moveTo_anim = async () => {
-        const distance = position.distanceTo(object.position);
-        if(distance <= 0.05) {
-            console.log("chegou!")
-            object.position.set(position.x, position.y, position.z);
-            Render.render();
-            running_anim = null;
-            setTimeout(()=>running_anim=null, 20);
-            return;
-        }
-
-        requestAnimationFrame(() => moveTo_anim());
-
-        if(distance > 0.75) {
-            vel_ = Math.min(vel_ + 0.15, velocity);
-        } else if (distance < 0.25) {
-            vel_ = Math.max(vel_ - 0.25, 0.05);
-        } else {
-            vel_ = velocity;
-        }
-        
-        object.position.x += (delta.x)*(vel_/60);
-        object.position.y += (delta.y)*(vel_/60);
-        object.position.z += (delta.z)*(vel_/60);
-        Render.render();
+async function moveTo (object:THREE.Object3D, path:THREE.Vector3[]):Promise<void> {
+    if(path.length < 2) {
+        running_anim = null;
+        setTimeout(()=>running_anim=null, 20);
+        return;
     }
 
-    await moveTo_anim();
+    const velocity = 3;
+    let i = 0;
+
+    let from = path[i];
+    let to = path[i+1];
+
+    let delta = to.clone().sub(from).normalize();
+
+    const moveTo_anim = () => {
+        if(i > path.length) {
+            object.position.set(to.x, to.y, to.z);
+            running_anim = null;
+            setTimeout(()=>running_anim=null, 20);
+            Render.render();
+            return;
+        }        
+
+        const distance = object.position.distanceTo(to);
+        if(distance <= 0.1) {
+            object.position.set(to.x, to.y, to.z);
+            if(++i < path.length-1) {
+                from = path[i];
+                to = path[i+1];
+                delta = to.clone().sub(from).normalize();
+            }
+        } else {            
+            object.position.x += (delta.x)*(velocity/60);
+            object.position.y += (delta.y)*(velocity/60);
+            object.position.z += (delta.z)*(velocity/60);
+            Render.render();
+        }        
+        requestAnimationFrame(() => moveTo_anim());        
+    }
+    moveTo_anim();
 }
+
+
+
+
+
+
+Render.render()
