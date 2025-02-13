@@ -1,15 +1,15 @@
 import * as THREE from "three";
 import { Render } from "./render";
-import { Node, Edge } from "./graph";
+import { Node } from "./graph";
 
 
 export class Board {
     private scene:THREE.Scene;
     private object:THREE.Object3D = new THREE.Object3D();
-    private nodes:Node[][][] = [];
+    private nodes:(Node|null)[][][] = [];
     public size:number = 0;
 
-    public getNodes():Node[][][] {
+    public getNodes():(Node|null)[][][] {
         return this.nodes;
     }
 
@@ -26,8 +26,7 @@ export class Board {
         this.render();
     }
 
-    public addObject(object:any) {
-        console.log(object)
+    public addBlock(object:any) {
 
         const cube = new THREE.Mesh(
             new THREE.BoxGeometry(),
@@ -38,13 +37,39 @@ export class Board {
             })
         );
 
-        cube.position.set(object.position.x, object.position.y, object.position.z);
+        const {x,y,z} = object.position;
+
+        cube.position.set(x,y,z);
         cube.material.color.setHex(object?.color);
         
         cube.castShadow = true;
         cube.receiveShadow = true;
-        
+
         this.object.add(cube);
+
+        const x_ = Math.floor(x+this.size/2);
+        const z_ = Math.floor(z+this.size/2);
+
+        this.nodes[y][z_][x_] = {
+            id: `${x},${y},${z}`,
+            object: cube,
+            position: cube.position.clone()
+        };
+        
+        this.render();
+    }
+
+    public removeBlock(object:any) {   
+
+        const {x,y,z} = object.position;
+        const x_ = Math.floor(x+this.size/2);
+        const z_ = Math.floor(z+this.size/2);
+
+        if(this.nodes[y][z_][x_]?.object != null)
+            this.object.remove(this.nodes[y][z_][x_].object); 
+
+        this.nodes[y][z_][x_] = null;
+    
         this.render();
     }
 
