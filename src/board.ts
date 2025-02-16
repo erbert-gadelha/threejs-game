@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { Render } from "./render";
 import { Node } from "./graph";
+import ModelLoader from "./modelLoader";
 
 
 export class Board {
@@ -8,6 +9,8 @@ export class Board {
     private object:THREE.Object3D = new THREE.Object3D();
     private nodes:(Node|null)[][][] = [];
     public size:number = 0;
+    private ONE_BLOCK_DOWN:THREE.Mesh = new THREE.Mesh();
+
 
     public getNodes():(Node|null)[][][] {
         return this.nodes;
@@ -26,31 +29,24 @@ export class Board {
         this.render();
     }
 
-    public addBlock(object:any) {
+    public async addBlock(object:any) {
 
-        const cube = new THREE.Mesh(
-            new THREE.BoxGeometry(),
-            new THREE.MeshStandardMaterial({
-                color: object?.color,
-                emissive: 0xffffff,
-                emissiveIntensity: 0
-            })
-        );
+        const cube = await ModelLoader.load(object.model)
 
         const {x,y,z} = object.position;
 
         cube.position.set(x,y,z);
-        cube.material.color.setHex(object?.color);
+        cube.scale.multiplyScalar(.5)
         
         cube.castShadow = true;
         cube.receiveShadow = true;
 
-        this.object.add(cube);
+        this.ONE_BLOCK_DOWN.add(cube);
 
         const x_ = Math.floor(x+this.size/2);
         const z_ = Math.floor(z+this.size/2);
 
-        this.nodes[y][z_][x_] = {
+        this.nodes[y*2][z_][x_] = {
             id: `${x},${y},${z}`,
             object: cube,
             position: cube.position.clone()
@@ -63,17 +59,18 @@ export class Board {
 
         const {x,y,z} = object.position;
         const x_ = Math.floor(x+this.size/2);
+        const y_ = y*2;
         const z_ = Math.floor(z+this.size/2);
 
-        if(this.nodes[y][z_][x_]?.object != null)
-            this.object.remove(this.nodes[y][z_][x_].object); 
+        if(this.nodes[y_][z_][x_]?.object != null)
+            this.nodes[y_][z_][x_].object.removeFromParent() 
 
-        this.nodes[y][z_][x_] = null;
+        this.nodes[y_][z_][x_] = null;
     
         this.render();
     }
 
-    public create(size:number):THREE.Object3D {
+    public async create(size:number):Promise<THREE.Object3D> {
         this.size = size;
 
         const colors:THREE.ColorRepresentation[] = [
@@ -95,38 +92,38 @@ export class Board {
 
         const y = 0;
         const half:number = Number.parseInt(`${size/2}`);
+
+        this.ONE_BLOCK_DOWN.position.y = -.5
+        this.object.add(this.ONE_BLOCK_DOWN);
+
         for(let x = 0; x < size; x++) {
             for(let z = 0; z < size; z++) {
-                const geometry = new THREE.BoxGeometry();
-                const material = new THREE.MeshStandardMaterial({
-                    color: colors[(x+z)%colors.length],
-                    emissive: 0xffffff,
-                    emissiveIntensity: 0
-                });
-                const cube = new THREE.Mesh(geometry, material);
-                cube.position.set(x-half, 0, z-half);
+                const mesh = await ModelLoader.load('grass_block');                
+                mesh.scale.multiplyScalar(.5)
+                mesh.position.set(x-half, 0, z-half);
+                this.ONE_BLOCK_DOWN.add(mesh);
 
-                cube.castShadow = true; //default is false
-                cube.receiveShadow = true; //default
-
-                this.object.add(cube);
-                this.nodes[y][z][x] = {
+                this.nodes[y*2][z][x] = {
                     id: `${x},${y},${z}`,
-                    object: cube,
-                    position: cube.position.clone()
+                    object: mesh,
+                    position: mesh.position.clone()
                 };
             }
         }
 
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 2); // Cor branca, intensidade 1
-        directionalLight.position.set(1, 2, 1); // Define a posição da luz
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 5); // Cor branca, intensidade 1
+        directionalLight.position.set(10, 20, 10); // Define a posição da luz
         directionalLight.castShadow = true; // default false
 
 
         directionalLight.shadow.mapSize.width = 512; // default
         directionalLight.shadow.mapSize.height = 512; // default
         directionalLight.shadow.camera.near = 0.5; // default
-        directionalLight.shadow.camera.far = 500; // default
+        directionalLight.shadow.camera.far = 50; // default
+
+        
+
+
         
         this.object.add(directionalLight);
         this.scene.add(this.object);

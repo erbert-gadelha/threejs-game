@@ -3,6 +3,8 @@ import { Board } from "./board";
 import { Control } from "./control";
 import { Render } from "./render";
 import Navigation from "./navigation";
+import ModelLoader from "./modelLoader";
+
 
 // Criar a cena
 const scene = new THREE.Scene();
@@ -10,7 +12,7 @@ scene.background = new THREE.Color(0x1b77f3); // Azul claro (cor do céu)
 
 
 // Cria Luz Ambiente
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.05); // Cor branca, intensidade 0.5
+const ambientLight = new THREE.AmbientLight(0xffffff, 1); // Cor branca, intensidade 0.5
 scene.add(ambientLight);
 
 // Criar a câmera
@@ -28,7 +30,7 @@ Render.set(renderer, scene, camera);
 
 
 const board:Board = new Board(scene);
-const boardObject:THREE.Object3D = board.create(5);
+const boardObject:THREE.Object3D = await board.create(5);
 
 
 
@@ -47,30 +49,11 @@ window.addEventListener("resize", () => {
 });
 
 
-board.addBlock({
-    color:0xffff00,
-    position: { x: 1, y: 1, z: 1 }
-})
-
-board.addBlock({
-    color:0x0000ff,
-    position: { x: 0, y: 2, z: 1 }
-})
-
-board.addBlock({
-    color:0x00ff00,
-    position: { x: 0, y: 2, z: 0 }
-})
-board.addBlock({
-    color:0xff0000,
-    position: { x: 0, y: 2, z: -1 }
-})
-
-board.addBlock({
-    color:0x0000ff,
-    position: { x: -1, y: 1, z: -1 }
-})
-
+board.addBlock({model:'grass_block', position: { x: 1, y: 1, z: 1 }})
+board.addBlock({model:'grass_block', position: { x: 0, y: 1, z: 1 }})
+board.addBlock({model:'grass_block', position: { x: 0, y: 1, z: 0 }})
+board.addBlock({model:'grass_block', position: { x: 0, y: 1, z: -1 }})
+board.addBlock({model:'grass_block', position: { x: -1,y:.5, z: -1}})
 board.removeBlock({position: { x: -1, y: 0, z: -1 }});
 board.removeBlock({position: { x: 1, y: 0, z: 1 }});
 board.removeBlock({position: { x: 0, y: 0, z: -2 }});
@@ -84,26 +67,25 @@ board.removeBlock({position: { x: 0, y: 0, z:  2 }});
 const control:Control = new Control(scene, camera, boardObject);
 board.add(control.selector);
 window.addEventListener("click",    (event) => control.onMouseClick(event));
-window.addEventListener("mouseup",  (/*event*/) => control.onMouseUp(/*event*/));
+window.addEventListener("mouseup",  (event) => control.onMouseUp(event));
 window.addEventListener("mousedown",(event) => control.onMouseDown(event));
 window.addEventListener("mousemove",(event) => control.onMouseMove(event));
+window.addEventListener("touchstart",  (event) => control.onTouchStart(event));
+window.addEventListener("touchmove",  (event) => control.onTouchMove(event));
 window.addEventListener("wheel",    (event) => control.onMouseWheel(event));
 
 
 
 
-function createPlayer() {
-    const geometry = new THREE.BoxGeometry(.5, .5, .5);
-    const material = new THREE.MeshStandardMaterial({ color: 0xffffff });
-    const sprite = new THREE.Mesh(geometry, material);
-    sprite.castShadow = true;
-    sprite.receiveShadow = true;
-    sprite.position.y = 1 - (0.5/2);
+async function createPlayer(model:string) {
+    const sprite = await ModelLoader.load(model);
+    sprite.scale.multiplyScalar(.5)
+    sprite.position.y = .5;
 
     const player_ = new THREE.Group();
     
     player_.add(sprite);
-    player_.position.set(0,2,0)
+    player_.position.set(0,1,0)
     player_.raycast = () => {}
     sprite.raycast = () => {}
 
@@ -111,7 +93,7 @@ function createPlayer() {
 }
 
 // Criar geometria e material
-const player = createPlayer();
+const player = await createPlayer('bulbasaur');
 board.add(player);
 
 
@@ -126,49 +108,71 @@ control.method = async (object:THREE.Object3D) => {
     if(running_anim != null)
         return;
 
+    console.log("position", object.position)
+
     const path = navigation.findPath(player.position.clone(), object.position.clone());
     running_anim =  moveTo(player, path);
 };
 
 
-async function moveTo (object:THREE.Object3D, path:THREE.Vector3[]):Promise<void> {
-    if(path.length < 2) {
+
+async function moveTo(object: THREE.Object3D, path: THREE.Vector3[]): Promise<void> {
+    if (path.length < 2) {
         running_anim = null;
-        setTimeout(()=>running_anim=null, 20);
+        setTimeout(() => running_anim = null, 20);
         return;
     }
 
     const velocity = 3;
+    const maxHeight = 1.5;  // Altura máxima do pulo
+    let vel_y, vel_x, rotation;
     let i = 0;
 
     let from = path[i];
-    let to = path[i+1];
-
-    let delta = to.clone().sub(from).normalize().multiplyScalar(velocity/60);
+    let to = path[i + 1];
+    let delta = new THREE.Vector3(to.x-from.x,0,to.z-from.z).normalize().multiplyScalar(velocity / 60);
+    const position = object.position.clone();
 
     const moveTo_anim = () => {
-        if(i > path.length) {
+        if (i > path.length) {
             object.position.set(to.x, to.y, to.z);
+            object.children[0].rotation.x = 0;
             running_anim = null;
-            setTimeout(()=>running_anim=null, 20);
+            setTimeout(() => running_anim = null, 20);
             Render.render();
             return;
-        }        
+        }
 
-        const distance = object.position.distanceTo(to);
-        if(distance <= 0.1) {
-            object.position.set(to.x, to.y, to.z);
-            if(++i < path.length-1) {
+        const v2a = new THREE.Vector2(object.position.x, object.position.z), v2b = new THREE.Vector2(to.x, to.z);
+        const distance = v2a.distanceTo(v2b);
+        object.rotation.y = Math.atan2(delta.x, delta.z);
+        if (distance <= 0.05) {
+            position.set(to.x, to.y, to.z);
+            object.position.copy(position);
+
+            if (++i < path.length - 1) {
                 from = path[i];
-                to = path[i+1];
-                
-                delta = to.clone().sub(from).normalize().multiplyScalar(velocity/60);
+                to = path[i + 1];
+                delta = new THREE.Vector3(to.x-from.x,0,to.z-from.z).normalize().multiplyScalar(velocity / 60);
+                object.rotation.y = Math.atan2(delta.x, delta.z);
             }
         } else {
-            object.position.add(delta);
+            if (from.y == to.y) {
+                vel_y = .1; vel_x = 1; rotation = 20;
+            } else {
+                vel_y = .4; vel_x = 0.7; rotation = 50;
+            }
+
+            position.add(delta.clone().multiplyScalar(vel_x));
+            object.position.copy(position);
+            
+            const middle = 1-Math.abs(distance-0.5)*2
+            object.position.y = from.y*distance + middle*vel_y + to.y*(1-distance);
+            object.children[0].rotation.x = (.5-distance)*rotation*(Math.PI/180);
             Render.render();
-        }        
-        requestAnimationFrame(() => moveTo_anim());        
+        }
+        
+        requestAnimationFrame(() => moveTo_anim());
     }
     moveTo_anim();
 }
@@ -177,5 +181,3 @@ async function moveTo (object:THREE.Object3D, path:THREE.Vector3[]):Promise<void
 
 
 
-
-Render.render()

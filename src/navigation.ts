@@ -22,7 +22,7 @@ export default class Navigation {
         this.nodes.forEach((node_: Node) => {
             if (node) return;        
             // Comparação com tolerância
-            if (position.distanceTo(node_.object?.position ?? new THREE.Vector3()) < 0.5)
+            if (position.distanceTo(node_.position ?? new THREE.Vector3()) < 0.25)
                 node = node_;
             
         });
@@ -73,7 +73,17 @@ export default class Navigation {
                                 this.edges.push({
                                     n1: currNode,
                                     n2: nextNode_high,
-                                    distance: currNode.position.distanceTo(nextNode_high.position)
+                                    distance: 1
+                            });
+                        }
+                        
+                        if(y+2 < nodes_.length) {
+                            const nextNode_high = nodes_[y+2][z][x_];
+                            if(nextNode_high)
+                                this.edges.push({
+                                    n1: currNode,
+                                    n2: nextNode_high,
+                                    distance: 2.5
                             });
                         }
 
@@ -83,7 +93,16 @@ export default class Navigation {
                                 this.edges.push({
                                     n1: currNode,
                                     n2: nextNode_low,
-                                    distance: currNode.position.distanceTo(nextNode_low.position)
+                                    distance: 1
+                            });
+                        }
+                        if(y-2 >= 0) {
+                            const nextNode_low = nodes_[y-2][z][x_];
+                            if(nextNode_low)
+                                this.edges.push({
+                                    n1: currNode,
+                                    n2: nextNode_low,
+                                    distance: 2.5
                             });
                         }
                     }
@@ -138,11 +157,11 @@ export default class Navigation {
         const origin_:Node|null = this.findNode(origin);
         const target_:Node|null = this.findNode(target);
         if(origin_ == null) {
-            console.error(`Não foi possível localizar o Tile de posição (${origin.x}, ${origin.y}, ${origin.z})`);
+            console.error(`Não foi possível localizar o Tile de origem na posição (${origin.x}, ${origin.y}, ${origin.z})`);
             return [];
         }
         if(target_ == null) {
-            console.error(`Não foi possível localizar o Tile de posição (${target.x}, ${target.y}, ${target.z})`);
+            console.error(`Não foi possível localizar o Tile de destino na posição (${target.x}, ${target.y}, ${target.z})`);
             return [];
         }        
 
