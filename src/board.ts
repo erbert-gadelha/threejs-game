@@ -71,6 +71,14 @@ export class Board {
     }
 
     public async create(size:number):Promise<THREE.Object3D> {
+        /*if(this.object){
+            console.log(this.object)
+            this.object.removeFromParent()
+            this.scene.remove(this.object);
+            this.scene.removeFromParent();
+            this.object = new THREE.Object3D()
+        }*/
+
         this.size = size;
 
         this.nodes = new Array(this.size);

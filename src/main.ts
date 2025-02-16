@@ -7,6 +7,9 @@ import ModelLoader from "./modelLoader";
 import Movement from "./movement";
 import { Player } from "./player";
 
+import textura from  '../public/obj/character/charmander/emissive.png'
+import { velocity } from "three/tsl";
+
 
 // Criar a cena
 const scene = new THREE.Scene();
@@ -22,7 +25,7 @@ const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerH
 camera.position.z = 10;
 
 // Criar o renderizador
-const renderer = new THREE.WebGLRenderer();
+const renderer = new THREE.WebGLRenderer({antialias: true});
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 renderer.shadowMap.enabled = true;
@@ -38,10 +41,12 @@ const control:Control = new Control(scene, camera, new THREE.Mesh());
 board.add(control.selector);
 
 
-async function createPlayer(model:string, position:THREE.Vector3|null, standing:boolean, velocity:number):Promise<Player> {
+async function createPlayer(model:string, position:THREE.Vector3|null):Promise<Player> {
     const sprite = await ModelLoader.load(`character/${model}`);
     sprite.scale.multiplyScalar(.5)
     sprite.position.y = .5;
+
+    const status = getStatus(model)
 
     const player_ = new THREE.Group();
     if(!position)
@@ -53,11 +58,20 @@ async function createPlayer(model:string, position:THREE.Vector3|null, standing:
     player_.raycast = () => {}
     sprite.raycast = () => {}
 
+    switch (model) {
+        case 'charmander':
+            const light:THREE.Light = new THREE.PointLight(0xffaa00, .5, 0, 2)
+            light.position.copy(new THREE.Vector3(0,1.1,-.4));
+            player_.add(light)
+            break;
+    }
+
+
     return {
         object: player_,
         position: player_.position,
-        standing: standing,
-        velocity: velocity
+        standing: status.standing,
+        velocity: status.velocity
     };
 }
 
@@ -70,12 +84,9 @@ const navigation:Navigation = new Navigation(null);
 
 control.method = async (object:THREE.Object3D) => {
     if(running_anim != null)
-        return;
-    const player:Player = getPlayer();
+        return; const player:Player = getPlayer();
     const path = navigation.findPath(player.position, object.position.clone());
-    //running_anim = Movement.moveTo(player.object, path, player.standing, () => { running_anim = null; player.position=player.object.position; })
     running_anim = Movement.moveTo(player, path, () => { running_anim = null; player.position=player.object.position; })
-
 };
 
 function getPlayer():Player {
@@ -103,18 +114,54 @@ async function createMap():Promise<THREE.Object3D> {
     return boardObject;
 }
 
-start();
-async function start() {
+start('charmander');
+async function start(pokemon:string) {
     const boardObject:THREE.Object3D = await createMap();
     control.setBoardObject(boardObject);
-
-    //player = await createPlayer('squirtle', new THREE.Vector3(0,1,0), true, 3);
-    //player = await createPlayer('charmander', new THREE.Vector3(0,1,0), true, 3);
-    //player = await createPlayer('nidoran', new THREE.Vector3(0,1,0), false, 3);
-    player = await createPlayer('pikachu', new THREE.Vector3(0,1,0), false, 6);
-    //player = await createPlayer('bulbasaur', new THREE.Vector3(0,1,0), false, 3);
+    player = await createPlayer(pokemon,  new THREE.Vector3(0,1,0));    
     board.add(player.object);
     navigation.set(board)
 }
 
 
+async function reset(model:string) {
+    getPlayer().object?.removeFromParent()
+    running_anim = null;
+    player = await createPlayer(model,  new THREE.Vector3(0,1,0));
+    board.add(player.object);
+    setInterval(() => Render.render(), 100);
+}
+
+
+
+
+
+
+
+const hud:HTMLDivElement|null = document.querySelector("#hud");
+["click", "mousedown"].forEach((event_name:string) => {
+    hud?.addEventListener(event_name, (e:any) => {
+        e.stopPropagation();
+    })
+});
+
+
+console.log(hud?.querySelector("select"))
+hud?.querySelector("select")?.addEventListener("change", (e:any) => {
+    reset(e.target.value)
+})
+
+
+function getStatus(model:string) {
+    const status = {
+        "bulbasaur": {standing: false, velocity: 3},
+        "squirtle": {standing: true, velocity: 3},
+        "charmander": {standing: true, velocity: 3},
+        "pikachu": {standing: false, velocity: 6},
+        "nidoran": {standing: false, velocity: 4},
+    }[model]
+
+    if(status == null)
+        return {standing: true, velocity: 3}
+    return status
+}

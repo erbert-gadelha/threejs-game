@@ -80,12 +80,14 @@ export default class Navigation {
                     const x_ = x+1;
 
                     set(currNode, get(x_,  y,z));
+                    set(currNode, get(x_+1,  y,z));
                     set(currNode, get(x_,y+1,z));
                     set(currNode, get(x_,y+2,z));
                     set(currNode, get(x_,y-1,z));
                     set(currNode, get(x_,y-2,z));
                     
                     set(currNode, get(x,  y,z_));
+                    set(currNode, get(x,  y,z_+1));
                     set(currNode, get(x,y+1,z_));
                     set(currNode, get(x,y+2,z_));
                     set(currNode, get(x,y-1,z_));

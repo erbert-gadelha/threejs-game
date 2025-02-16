@@ -22,6 +22,8 @@ export default class Movement {
         let to = path[i + 1];
         let delta = new THREE.Vector3(to.x-from.x,0,to.z-from.z).normalize().multiplyScalar(max_step);
         const position = player.position.clone();
+        let Distance = from.distanceTo(to);
+        console.log("Distance", Distance)
     
         const moveTo_anim = () => {
             if (i > path.length) {
@@ -44,12 +46,15 @@ export default class Movement {
                 if (++i < path.length - 1) {
                     from = path[i];
                     to = path[i + 1];
+                    Distance = from.distanceTo(to);
+                    console.log("Distance", Distance)
                     delta = new THREE.Vector3(to.x-from.x,0,to.z-from.z).normalize().multiplyScalar(max_step);
                     player.object.rotation.y = Math.atan2(delta.x, delta.z);
                 }
             } else {
 
-                if(from.y == to.y) {
+                //if(from.y == to.y) {
+                if (distance == 1) {
                     vel_y = .1; vel_x = 1; 
                 } else {
                     vel_y = .7; vel_x = 0.7;
@@ -74,12 +79,16 @@ export default class Movement {
                     player.object.children[0].rotation.z = ((distance*2-1))*rotation*(Math.PI/180);
                 else
                     player.object.children[0].rotation.x = (.5-distance)*rotation*(Math.PI/180);
-                    //object.children[0].rotation.x = ((distance*2-1))*rotation*(Math.PI/180);
+
                 Render.render();
             }
             
             requestAnimationFrame(() => moveTo_anim());
         }
         moveTo_anim();
+    }
+
+    private static jumping_vetical() {
+
     }
 }

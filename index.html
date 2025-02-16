@@ -9,9 +9,40 @@
     <style>
         body { margin: 0; overflow: hidden; }
         canvas { display: block; }
+
+        #hud {
+            position: fixed;
+            top: 8px;
+            left: 8px;
+            font-family: "Lexend Deca", sans-serif;
+
+            background-color: rgba(255, 0, 0, 0.425);
+            background-color: red;
+            padding: 8px;
+            border-radius: 4px;
+
+            color: white;
+
+            select {
+                background-color: aquamarine;
+            }
+        }
+
     </style>
 </head>
 <body>
+
+    <div id="hud">
+        <label for="pokemon">pokemon</label>
+        <select name="pokemon" id="pokemon" form="pokemonform">
+          <option value="bulbasaur">bulbasaur</option>
+          <option value="squirtle">squirtle</option>
+          <option value="charmander">charmander</option>
+          <option value="pikachu">pikachu</option>
+          <option value="nidoran">nidoran</option>
+        </select>
+    </div>
+
     <script type="module" src="/src/main.ts"></script>
 </body>
 </html>
