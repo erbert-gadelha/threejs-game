@@ -8,7 +8,6 @@ export class Control {
     private raycaster:THREE.Raycaster  = new THREE.Raycaster();
     private mouse = new THREE.Vector2();
     private input:{[key:string]:boolean} = {"mouse_0": false, "mouse_1": false, "mouse_2": false};
-    private isMouseDown = false;
     private isDragging:boolean = false;
     private lastX = 0;
     private lastY = 0;
@@ -28,7 +27,7 @@ export class Control {
         const material:THREE.MeshBasicMaterial =  new THREE.MeshBasicMaterial({   
                 color: 0xffffff,
                 transparent: true, 
-                opacity: 0.5 // Define a transparência (0 = invisível, 1 = opaco)
+                opacity: 0.5
             });
         const geometry = new THREE.PlaneGeometry(1.03, 1.03);
         
@@ -38,8 +37,20 @@ export class Control {
         this.selector.raycast = () => {};
         this.selector.visible = false;
 
+
+        window.addEventListener("click",    (event) => this.onMouseClick(event));
+        window.addEventListener("mouseup",  (event) => this.onMouseUp(event));
+        window.addEventListener("mousedown",(event) => this.onMouseDown(event));
+        window.addEventListener("mousemove",(event) => this.onMouseMove(event));
+        window.addEventListener("touchstart",  (event) => this.onTouchStart(event));
+        window.addEventListener("touchmove",  (event) => this.onTouchMove(event));
+        window.addEventListener("wheel",    (event) => this.onMouseWheel(event));
+
     }
 
+    public setBoardObject(object:THREE.Object3D):void {
+        this.board = object;
+    }
 
     // Função para detectar clique
     public onMouseClick(event: MouseEvent) {

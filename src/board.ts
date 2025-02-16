@@ -73,14 +73,6 @@ export class Board {
     public async create(size:number):Promise<THREE.Object3D> {
         this.size = size;
 
-        const colors:THREE.ColorRepresentation[] = [
-            0xFF0000,
-            0x00FF00,
-            0x0000FF,
-            0xFFFF00
-        ]
-
-
         this.nodes = new Array(this.size);
         for(let i = 0; i < this.size; i++) {
             this.nodes[i] = new Array(this.size);
@@ -98,7 +90,7 @@ export class Board {
 
         for(let x = 0; x < size; x++) {
             for(let z = 0; z < size; z++) {
-                const mesh = await ModelLoader.load('grass_block');                
+                const mesh = await ModelLoader.load('scenary/grass_block');                
                 mesh.scale.multiplyScalar(.5)
                 mesh.position.set(x-half, 0, z-half);
                 this.ONE_BLOCK_DOWN.add(mesh);
@@ -111,19 +103,14 @@ export class Board {
             }
         }
 
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 5); // Cor branca, intensidade 1
-        directionalLight.position.set(10, 20, 10); // Define a posição da luz
-        directionalLight.castShadow = true; // default false
+        const directionalLight = new THREE.DirectionalLight(0xffddcc, 3); // Cor branca, intensidade 1
+        directionalLight.position.set(5, 5, 5); // Define a posição da luz
+        directionalLight.castShadow = true;
 
 
-        directionalLight.shadow.mapSize.width = 512; // default
-        directionalLight.shadow.mapSize.height = 512; // default
-        directionalLight.shadow.camera.near = 0.5; // default
-        directionalLight.shadow.camera.far = 50; // default
-
-        
-
-
+        //directionalLight.shadow.mapSize.width = 512; // default
+        //directionalLight.shadow.mapSize.height = 512; // default
+        //directionalLight.shadow.bias = -.0001;
         
         this.object.add(directionalLight);
         this.scene.add(this.object);

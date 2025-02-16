@@ -47,100 +47,74 @@ export default class Navigation {
 
         console.log("nodes", nodes_)
 
+        const get:(x:number, y:number, z:number) => Node|null = (x:number, y:number, z:number):Node|null => {
+            if(y < 0 || z < 0 || x < 0)
+                return null;
+            if(y >= nodes_.length || z >= nodes_[0].length || x >= nodes_[0][0].length )
+                return null;
+            return nodes_[y][z][x];
+        }
+
+        const set:(n1:Node|null, n2:Node|null) => void = (n1:Node|null, n2:Node|null):void => {
+            if(n1 && n2) {
+                this.drawLine(n1.position, n2.position)
+                const delta = n1.position.clone().sub(n2.position);
+                this.edges.push({
+                    n1: n1,
+                    n2: n2,
+                    distance: delta.lengthSq()
+                });
+            }
+        }
+        
 
         for(let y=0; y<nodes_.length; y++) {
             for(let z=0; z<nodes_.length; z++) {
                 const z_ = z+1;
                 for(let x=0; x<nodes_.length; x++) {
-                    const currNode =  nodes_[y][z][x];
+                    const currNode = get(x,y,z);                    
                     if(!currNode)
                         continue;
+
                     this.nodes.push(currNode);
-
                     const x_ = x+1;
-                    if(x_ < nodes_.length) {
-                        const nextNode = nodes_[y][z][x_];
-                        if(nextNode)
-                            this.edges.push({
-                                n1: currNode,
-                                n2: nextNode,
-                                distance: currNode.position.distanceTo(nextNode.position)
-                            });
+
+                    set(currNode, get(x_,  y,z));
+                    set(currNode, get(x_,y+1,z));
+                    set(currNode, get(x_,y+2,z));
+                    set(currNode, get(x_,y-1,z));
+                    set(currNode, get(x_,y-2,z));
                     
-                        if(y+1 < nodes_.length) {
-                            const nextNode_high = nodes_[y+1][z][x_];
-                            if(nextNode_high)
-                                this.edges.push({
-                                    n1: currNode,
-                                    n2: nextNode_high,
-                                    distance: 1
-                            });
-                        }
-                        
-                        if(y+2 < nodes_.length) {
-                            const nextNode_high = nodes_[y+2][z][x_];
-                            if(nextNode_high)
-                                this.edges.push({
-                                    n1: currNode,
-                                    n2: nextNode_high,
-                                    distance: 2.5
-                            });
-                        }
-
-                        if(y-1 >= 0) {
-                            const nextNode_low = nodes_[y-1][z][x_];
-                            if(nextNode_low)
-                                this.edges.push({
-                                    n1: currNode,
-                                    n2: nextNode_low,
-                                    distance: 1
-                            });
-                        }
-                        if(y-2 >= 0) {
-                            const nextNode_low = nodes_[y-2][z][x_];
-                            if(nextNode_low)
-                                this.edges.push({
-                                    n1: currNode,
-                                    n2: nextNode_low,
-                                    distance: 2.5
-                            });
-                        }
-                    }
-                    
-
-                    if(z_ < nodes_.length) {
-                        const nextNode = nodes_[y][z_][x];
-                        if(nextNode)
-                            this.edges.push({
-                                n1: currNode,
-                                n2: nextNode,
-                                distance: currNode.position.distanceTo(nextNode.position)
-                        });
-
-                        if(y+1 < nodes_.length) {
-                            const nextNode_high = nodes_[y+1][z_][x];
-                            if(nextNode_high)
-                                this.edges.push({
-                                    n1: currNode,
-                                    n2: nextNode_high,
-                                    distance: currNode.position.distanceTo(nextNode_high.position)
-                            });
-                        }
-
-                        if(y-1 >= 0) {
-                            const nextNode_low = nodes_[y-1][z_][x];
-                            if(nextNode_low)
-                                this.edges.push({
-                                    n1: currNode,
-                                    n2: nextNode_low,
-                                    distance: currNode.position.distanceTo(nextNode_low.position)
-                            });
-                        }
-                    }      
+                    set(currNode, get(x,  y,z_));
+                    set(currNode, get(x,y+1,z_));
+                    set(currNode, get(x,y+2,z_));
+                    set(currNode, get(x,y-1,z_));
+                    set(currNode, get(x,y-2,z_));     
                 }                
             }            
-        }
-        
+        }        
+    }
+
+
+    private drawLine(from:THREE.Vector3, to:THREE.Vector3):void { 
+        const delta = from.clone().sub(to);
+        from = from.clone();
+        to = to.clone();
+        from.y += .6;
+        to.y += .6;
+
+        delta.multiplyScalar(.7)
+
+        from.sub(delta)
+        to.add(delta)
+
+
+        const geometry = new THREE.BufferGeometry().setFromPoints([from, to]);
+        const material = new THREE.LineBasicMaterial({ color: 0x00ff00, linewidth: 2});
+        const line = new THREE.Line(geometry, material)
+        line.raycast = () => {}
+        if(this.board)
+            this.board.add(line);
     }
 
     public getInstance():Navigation {

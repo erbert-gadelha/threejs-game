@@ -1,15 +1,13 @@
 import * as THREE from "three";
+import { OBJLoader } from 'three-stdlib';
+import { MTLLoader } from 'three-stdlib';
 
-import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
-import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader';
+
 
 export default class ModelLoader {
-    private static mtlLoader:MTLLoader = new MTLLoader();
-    private static objLoader:OBJLoader = new OBJLoader();
-
+    private static mtlLoader:any = new MTLLoader();
+    private static objLoader:any = new OBJLoader();
     private static models: { [key: string]: THREE.Mesh } = {}
-    //private static geometries: { [key: string]: THREE.Geomet } = {}
-
 
     public static async load(model: string): Promise<THREE.Object3D> {
         const objPath = `/threejs-game/obj/${model}/model.obj`;
