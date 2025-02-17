@@ -103,7 +103,9 @@ control.method = async (object:THREE.Object3D) => {
 };
 const onEachStep = (stamina:number) => {
     stamina_count += Math.round(stamina * 2) / 2;
-    document.querySelector("#hud-stamina").innerText = stamina_count.toFixed(1);
+    const element:HTMLElement|null = document.querySelector("#hud-stamina")
+    if(element)
+        element.innerText = stamina_count.toFixed(1);
 }
 
 function getPlayer():Player {
