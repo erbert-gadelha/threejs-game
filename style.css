@@ -14,9 +14,7 @@ body { margin: 0; overflow: hidden; }
 canvas { display: block; }
 
 #hud {
-    display: flex;
-    gap: 8px;
-    
+        
     position: fixed;
     bottom: 0px;
     left: 0px;
@@ -24,46 +22,111 @@ canvas { display: block; }
     margin: auto;
     margin-bottom: 16px;
 
-    justify-content: center;
-    align-items: center;
-
     width: fit-content;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap-reverse;
+    padding: 0 16px;
+
+
     font-family: "Lexend Deca", sans-serif;
-
-    --background-color: white;
-    --shadow-px: 2px;
-
-    padding: 8px;
-    background-color: var(--background-color);
-
-    
-    box-shadow: black 0 0 0 var(--shadow-px), var(--background-color) 0 0 0 calc(var(--shadow-px)*2 - 1px), black 0 0 0 calc(var(--shadow-px)*3 - 1px);
     font-size: .8rem;
 
-    img {
-        object-fit: cover;
-        image-rendering: pixelated;
-        width: 24px;
-    }
+    
+    div {
 
-    select {
-        background-color: black;
-        color: white;
+        
+        flex: 1;
+        width: 100%;
         display: flex;
+        gap: 8px;
 
-        padding: 2px 4px;
-        border: 2px black solid;
-        outline: none;
-        border-radius: none;
+        justify-content: center;
+        align-items: center;
 
-        option {
-            color: black;
-            background-color: white;
 
-            
-        }option:hover {
-            background-color: red;
+        --background-color: white;
+        --color-0: black;
+        --shadow-px: 2px;
+
+        padding: 12px;
+        background-color: var(--background-color);        
+        box-shadow: var(--color-0) 0 0 0 var(--shadow-px) inset, var(--background-color) 0 0 0 calc(var(--shadow-px)*2 - 1px) inset, var(--color-0) 0 0 0 calc(var(--shadow-px)*3 - 1px) inset;
+        color: var(--color-0);
+
+        &:nth-child(2) {
+            min-width: 237px;
         }
-    }
 
+        img {
+            object-fit: cover;
+            image-rendering: pixelated;
+            width: 24px;
+        }
+
+        select {
+            background-color: black;
+            color: white;
+            display: flex;
+
+            padding: 2px 4px;
+            border: 2px black solid;
+            outline: none;
+            border-radius: none;
+
+            option {
+                color: black;
+                background-color: white;
+
+                
+            }option:hover {
+                background-color: red;
+            }
+        }
+
+    }
+}
+
+
+
+
+.squirtle {
+    --background-color: rgb(0, 140, 255) !important;
+    --color-0: rgb(86, 244, 255) !important;
+
+
+	background: linear-gradient(90deg, #0066da, #1ab7ff, #23a6d5, #0066da);
+	background-size: 400% 400%;
+    background-repeat: repeat;
+	animation: gradient 8s linear infinite;
+}
+
+.charmander {
+    --background-color: rgb(255, 0, 0) !important;
+    --color-0: rgb(255, 180, 68) !important;
+
+	/*background: linear-gradient(90deg, #da0000, #ffc400, #e05200, #da0000);*/
+	background: linear-gradient(90deg, #ffc400, #da0000, #e05200, #da0000, #ffc400, #e05200, #ffc400);
+	background-size: 400% 400%;
+    background-repeat: repeat;
+	animation: gradient 8s linear infinite;
+}
+
+.pikachu {
+    --background-color: rgb(0, 0, 0) !important;
+    --color-0: yellow !important;
+
+	background: linear-gradient(-45deg, black 50%, rgb(255, 241, 39) 52%, black 55%);
+	background-size: 1200% 1200%;
+    background-repeat: repeat;
+	animation: gradient 8s linear infinite;
+}
+
+@keyframes gradient {
+	0% {
+		background-position: 0% 50%;
+	}
+	100% {
+		background-position: 400% 50%;
+	}
 }
