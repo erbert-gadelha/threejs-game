@@ -55,7 +55,7 @@ export default class Navigation {
             return nodes_[y][z][x];
         }
 
-        const set:(n1:Node|null, n2:Node|null) => void = (n1:Node|null, n2:Node|null):void => {
+        const set:(n1:Node|null, n2:Node|null) => boolean = (n1:Node|null, n2:Node|null):boolean => {
             if(n1 && n2) {
                 this.drawLine(n1.position, n2.position)
                 const delta = n1.position.clone().sub(n2.position);
@@ -64,6 +64,9 @@ export default class Navigation {
                     n2: n2,
                     distance: delta.lengthSq()
                 });
+                return true;
+            } else {
+                return false;
             }
         }
         
@@ -77,18 +80,23 @@ export default class Navigation {
                         continue;
 
                     this.nodes.push(currNode);
+                    let cantJump:boolean = false;  
                     const x_ = x+1;
-
-                    set(currNode, get(x_,  y,z));
-                    set(currNode, get(x_+1,  y,z));
-                    set(currNode, get(x_,y+1,z));
-                    set(currNode, get(x_,y+2,z));
+                  
+                    cantJump = set(currNode, get(x_,  y,z))                    
+                    cantJump = set(currNode, get(x_,y+1,z)) || cantJump;
+                    cantJump = set(currNode, get(x_,y+2,z)) || cantJump;
+                    if(!cantJump)
+                        set(currNode, get(x_+1,  y,z));                    
                     set(currNode, get(x_,y-1,z));
                     set(currNode, get(x_,y-2,z));
-                    
-                    set(currNode, get(x,  y,z_));
-                    set(currNode, get(x,  y,z_+1));
-                    set(currNode, get(x,y+1,z_));
+
+
+                    cantJump = set(currNode, get(x,  y,z_));
+                    cantJump = set(currNode, get(x,y+1,z_)) || cantJump;
+                    cantJump = set(currNode, get(x,y+2,z_)) || cantJump;
+                    if(!cantJump)
+                        set(currNode, get(x,  y,z_+1));                    
                     set(currNode, get(x,y+2,z_));
                     set(currNode, get(x,y-1,z_));
                     set(currNode, get(x,y-2,z_));     
@@ -112,7 +120,8 @@ export default class Navigation {
 
 
         const geometry = new THREE.BufferGeometry().setFromPoints([from, to]);
-        const material = new THREE.LineBasicMaterial({ color: 0x00ff00, linewidth: 2});
+        const material = new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 2, transparent: true, opacity: .5 });
+        //const material = new THREE.LineBasicMaterial({ color: 0x00ff00, linewidth: 2});
         const line = new THREE.Line(geometry, material)
         line.raycast = () => {}
         if(this.board)

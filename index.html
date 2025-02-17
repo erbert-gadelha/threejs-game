@@ -3,37 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-
-    <!--<meta name="viewport" content="width=device-width, initial-scale=1.0">-->
+    <link rel="stylesheet" href="style.css">
     <title>Three.js + TypeScript</title>
     <style>
-        body { margin: 0; overflow: hidden; }
-        canvas { display: block; }
-
-        #hud {
-            position: fixed;
-            top: 8px;
-            left: 8px;
-            font-family: "Lexend Deca", sans-serif;
-
-            background-color: rgba(255, 0, 0, 0.425);
-            background-color: red;
-            padding: 8px;
-            border-radius: 4px;
-
-            color: white;
-
-            select {
-                background-color: aquamarine;
-            }
-        }
-
+        
     </style>
 </head>
 <body>
 
     <div id="hud">
-        <label for="pokemon">pokemon</label>
+        <img src="public/images/pokeball-sprite.png" alt="">
+        <label for="pokemon">POKÉMON</label>
         <select name="pokemon" id="pokemon" form="pokemonform">
           <option value="bulbasaur">bulbasaur</option>
           <option value="squirtle">squirtle</option>

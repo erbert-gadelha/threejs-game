@@ -7,9 +7,6 @@ import ModelLoader from "./modelLoader";
 import Movement from "./movement";
 import { Player } from "./player";
 
-import textura from  '../public/obj/character/charmander/emissive.png'
-import { velocity } from "three/tsl";
-
 
 // Criar a cena
 const scene = new THREE.Scene();
@@ -114,8 +111,8 @@ async function createMap():Promise<THREE.Object3D> {
     return boardObject;
 }
 
-start('charmander');
-async function start(pokemon:string) {
+start("bulbasaur");
+async function start(pokemon:"bulbasaur"|"squirtle"|"charmander"|"pikachu"|"nidoran") {
     const boardObject:THREE.Object3D = await createMap();
     control.setBoardObject(boardObject);
     player = await createPlayer(pokemon,  new THREE.Vector3(0,1,0));    
