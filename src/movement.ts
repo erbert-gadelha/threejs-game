@@ -4,10 +4,10 @@ import { Player } from "./player";
 
 export default class Movement {
 
-    public static async moveTo(player:Player, path:THREE.Vector3[], onFinish:Function): Promise<any> {
+    public static async moveTo(player:Player, path:THREE.Vector3[], onEachStep:Function, onEndAnim:Function): Promise<any> {
         if (path.length < 2) {
-            onFinish()
-            setTimeout(onFinish, 20);
+            onEndAnim()
+            setTimeout(onEndAnim, 20);
             return;
         }
 
@@ -15,8 +15,8 @@ export default class Movement {
             player.object.position.set(to.x, to.y, to.z);
             player.object.children[0].rotation.x = 0;
             player.object.children[0].rotation.z = 0;
-            onFinish();
-            setTimeout(onFinish, 20);
+            onEndAnim();
+            setTimeout(onEndAnim, 20);
             Render.render();
         }
 
@@ -28,9 +28,7 @@ export default class Movement {
         let delta = new THREE.Vector3(to.x-from.x,0,to.z-from.z).normalize().multiplyScalar(max_step);
         const position = player.position.clone();
         let Distance:number = 1;
-        console.log("Distance", Distance)
 
-        //let anim_function:(position:THREE.Vector3, delta:THREE.Vector3, progress:number)=>void = this.walk_standing;
         let anim_function:Function = this.walk_standing;
 
         const moveTo_anim = () => {
@@ -49,7 +47,8 @@ export default class Movement {
                     from = path[i];
                     to = path[i + 1];
                     Distance = from.distanceTo(to);
-                    console.log("Distance", Distance)
+                    if(i>=0)
+                        onEachStep(Distance);  
                     delta = this.delta2D(to, from).normalize().multiplyScalar(max_step);
                     player.object.rotation.y = Math.atan2(delta.x, delta.z);
 
@@ -57,24 +56,19 @@ export default class Movement {
                     player.object.children[0].rotation.z = 0;
 
 
-                    if(Distance == 2){
+                    if(Distance == 2)
                         anim_function = this.jump_horizontal;
-                        console.log("jump_horizontal")
-                    }
-                    else if (from.y != to.y){
+                    else if (from.y != to.y)
                         anim_function = this.jump_vertical;
-                        console.log("jump_vertical")
-                    }
-                    else{
-                        console.log("walk_")
+                    else
                         anim_function = (player.standing?this.walk_standing:this.walk_not_standing);
-                    }
+                    
                 }
             } else {
-                anim_function(player, from, to, delta, distance)     
-                Render.render();
+                anim_function(player, from, to, delta, distance)
             }
-            
+
+            Render.render();            
             requestAnimationFrame(() => moveTo_anim());
         }
         moveTo_anim();

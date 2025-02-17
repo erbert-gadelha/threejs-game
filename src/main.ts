@@ -43,6 +43,15 @@ async function createPlayer(model:string, position:THREE.Vector3|null):Promise<P
     sprite.scale.multiplyScalar(.5)
     sprite.position.y = .5;
 
+    const stamina_element = document.querySelector("#stamina-status");
+    if (stamina_element && player) {
+        if(player)
+            stamina_element.classList.remove(player.name);   
+        stamina_element.classList.add(model);   
+    }
+
+
+
     const status = getStatus(model)
 
     const player_ = new THREE.Group();
@@ -65,6 +74,7 @@ async function createPlayer(model:string, position:THREE.Vector3|null):Promise<P
 
 
     return {
+        name: model,
         object: player_,
         position: player_.position,
         standing: status.standing,
@@ -79,17 +89,27 @@ async function createPlayer(model:string, position:THREE.Vector3|null):Promise<P
 let running_anim:Promise<void>|null = null;
 const navigation:Navigation = new Navigation(null);
 
+let stamina_count = 0;
+
 control.method = async (object:THREE.Object3D) => {
     if(running_anim != null)
         return; const player:Player = getPlayer();
+
     const path = navigation.findPath(player.position, object.position.clone());
-    running_anim = Movement.moveTo(player, path, () => { running_anim = null; player.position=player.object.position; })
+    const onEndAnim = () => { running_anim = null; player.position=player.object.position; };
+    stamina_count = 0
+
+    running_anim = Movement.moveTo(player, path, onEachStep, onEndAnim)//, onEachStep)
 };
+const onEachStep = (stamina:number) => {
+    stamina_count += Math.round(stamina * 2) / 2;
+    document.querySelector("#hud-stamina").innerText = stamina_count.toFixed(1);
+}
 
 function getPlayer():Player {
     if (player)
         return player;
-    return {object: new THREE.Mesh(), position: new THREE.Vector3(), standing: true, velocity: 10}
+    return {name: "null", object: new THREE.Mesh(), position: new THREE.Vector3(), standing: true, velocity: 10}
 }
 
 

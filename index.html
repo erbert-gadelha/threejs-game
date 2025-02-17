@@ -11,17 +11,25 @@
 </head>
 <body>
 
-    <div id="hud">
-        <img src="public/images/pokeball-sprite.png" alt="">
-        <label for="pokemon">POKÉMON</label>
-        <select name="pokemon" id="pokemon" form="pokemonform">
-          <option value="bulbasaur">bulbasaur</option>
-          <option value="squirtle">squirtle</option>
-          <option value="charmander">charmander</option>
-          <option value="pikachu">pikachu</option>
-          <option value="nidoran">nidoran</option>
-        </select>
-    </div>
+
+
+    <section id="hud">
+        <div>
+            <img src="public/images/pokeball-sprite.png" alt="">
+            <label for="pokemon">POKÉMON</label>
+            <select name="pokemon" id="pokemon" form="pokemonform">
+              <option value="bulbasaur">bulbasaur</option>
+              <option value="squirtle">squirtle</option>
+              <option value="charmander">charmander</option>
+              <option value="pikachu">pikachu</option>
+              <option value="nidoran">nidoran</option>
+            </select>
+        </div>
+
+        <div id="stamina-status">
+            <span>lost stamina:</span> <span id="hud-stamina">0.0</span>
+        </div>
+    </section>
 
     <script type="module" src="/src/main.ts"></script>
 </body>
