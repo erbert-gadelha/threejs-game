@@ -12,3 +12,11 @@ export interface Node {
     object: THREE.Object3D|null
     position: THREE.Vector3
 }
+
+
+export interface Dijkstra {
+    node:Node,
+    parent:Dijkstra|null,
+    distance:number,
+    isVisited:boolean
+}

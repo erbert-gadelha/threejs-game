@@ -6,6 +6,7 @@ import Navigation from "./navigation";
 import ModelLoader from "./modelLoader";
 import Movement from "./movement";
 import { Player } from "./player";
+import { Dijkstra } from "./graph";
 
 
 // Criar a cena
@@ -89,23 +90,25 @@ async function createPlayer(model:string, position:THREE.Vector3|null):Promise<P
 let running_anim:Promise<void>|null = null;
 const navigation:Navigation = new Navigation(null);
 
-let stamina_count = 0;
+//let stamina_count = 0;
 
 control.method = async (object:THREE.Object3D) => {
     if(running_anim != null)
         return; const player:Player = getPlayer();
 
-    const path = navigation.findPath(player.position, object.position.clone());
-    const onEndAnim = () => { running_anim = null; player.position=player.object.position; };
-    stamina_count = 0
+    const from = player.position, to = object.position.clone();
 
-    running_anim = Movement.moveTo(player, path, onEachStep, onEndAnim)//, onEachStep)
+    const dijikstra:Dijkstra[] = navigation.dijkstra(from, to);
+    console.log(dijikstra)
+    const onEndAnim = () => { running_anim = null; player.position=player.object.position; };
+    //stamina_count = 0
+
+    running_anim = Movement.moveTo(player, to, dijikstra, onEachStep, onEndAnim)//, onEachStep)
 };
-const onEachStep = (stamina:number) => {
-    stamina_count += Math.round(stamina * 2) / 2;
+const onEachStep = (consumed_stamina:number) => {
     const element:HTMLElement|null = document.querySelector("#hud-stamina")
     if(element)
-        element.innerText = stamina_count.toFixed(1);
+        element.innerText = consumed_stamina.toFixed(1)
 }
 
 function getPlayer():Player {

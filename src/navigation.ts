@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { Board } from "./board";
-import {Node, Edge} from "./graph"
+import {Node, Edge, Dijkstra} from "./graph"
 
 export default class Navigation {
     private board:Board|null = null;
@@ -58,12 +58,15 @@ export default class Navigation {
         const set:(n1:Node|null, n2:Node|null) => boolean = (n1:Node|null, n2:Node|null):boolean => {
             if(n1 && n2) {
                 this.drawLine(n1.position, n2.position)
-                const delta = n1.position.clone().sub(n2.position);
+                const delta = n1.position.clone().sub(n2.position.clone());
+
                 this.edges.push({
                     n1: n1,
                     n2: n2,
-                    distance: delta.lengthSq()
+                    distance: Math.round(delta.length() * 2)/2 // arredondado com precisao de 2 decimais
                 });
+
+
                 return true;
             } else {
                 return false;
@@ -120,7 +123,7 @@ export default class Navigation {
 
 
         const geometry = new THREE.BufferGeometry().setFromPoints([from, to]);
-        const material = new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 2, transparent: true, opacity: .5 });
+        const material = new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 2, transparent: true, opacity: delta.length()*delta.length()/2/*.5*/ });
         //const material = new THREE.LineBasicMaterial({ color: 0x00ff00, linewidth: 2});
         const line = new THREE.Line(geometry, material)
         line.raycast = () => {}
@@ -136,8 +139,9 @@ export default class Navigation {
     }
 
 
-    public findPath(origin:THREE.Vector3, target:THREE.Vector3):THREE.Vector3[] {
-        const path:THREE.Vector3[] = [];
+    //public findPath(origin:THREE.Vector3, target:THREE.Vector3):THREE.Vector3[] {
+    public dijkstra(origin:THREE.Vector3, target:THREE.Vector3):Dijkstra[] {
+        const path:Node[] = [];
 
         const origin_:Node|null = this.findNode(origin);
         const target_:Node|null = this.findNode(target);
@@ -153,7 +157,6 @@ export default class Navigation {
         const dijkstra:Dijkstra[] = []
         this.nodes.forEach((node:Node) => {
             const distance = (node == origin_)?0:Number.POSITIVE_INFINITY;
-
             dijkstra.push({
                 node: node,
                 parent:null,
@@ -163,12 +166,6 @@ export default class Navigation {
         })
 
 
-        const getVertice = (node:Node):Dijkstra|null => {
-            const vertice = dijkstra.find((dij:Dijkstra) => {return (dij.node == node);})
-            if(vertice)
-                return vertice;
-            return null;
-        }
 
         let unvisited = dijkstra.filter((node:Dijkstra) => { return !node.isVisited });
         let count = 0;
@@ -180,40 +177,83 @@ export default class Navigation {
             vertice.isVisited = true;
 
             this.getEdges(vertice.node).forEach((edge:Edge) => {
-                const other:Dijkstra|null = getVertice((edge.n1 == vertice.node)?edge.n2:edge.n1);
+                const other:Dijkstra|null = Navigation.getVertice((edge.n1 == vertice.node)?edge.n2:edge.n1, dijkstra);
                 if(other == null)
                     return;
 
                 const distance_ = vertice.distance + edge.distance;
                 if(distance_ < other?.distance) {
-                    other.parent = vertice.node;
                     other.distance = distance_;
+                    other.parent = vertice;
                 }
             })
-
 
             unvisited = dijkstra.filter((node:Dijkstra) => { return !node.isVisited });
         }
 
-        
-        
+        return dijkstra;
 
+    }
 
-        let curr:Dijkstra|null = getVertice(target_);
+    public static getPath(to:THREE.Vector3, dijkstra:Dijkstra[]):THREE.Vector3[] {
+        const path:THREE.Vector3[] = [];
+        const temp = dijkstra.filter((dijikstra:Dijkstra) => { return dijikstra.node.position.distanceTo(to) < 0.25; });
 
+        if(temp.length != 1)
+            return path;
+        const to_ = temp[0].node;
+
+        let curr:Dijkstra|null = Navigation.getVertice(to_, dijkstra);
         while(curr != null) {
             path.unshift(curr.node.position);
             if(curr.parent == null)
                 break;
-            curr = getVertice(curr.parent);
+            curr = Navigation.getVertice(curr.parent.node, dijkstra);
         }
 
-        if(path.length <= 1)
-            console.warn("dijkstra", dijkstra);
-        else
-            console.log("dijkstra", dijkstra);
+        return path;
+    }
+
+    public static getPath_indexes(to:THREE.Vector3, dijkstra:Dijkstra[]):number[] {
+        const path:number[] = [];
+        let curr:number = -1;
+
+        for (let i = 0; i < dijkstra.length; i++)
+            if(dijkstra[i].node.position.distanceTo(to) < 0.25) {
+                curr = i;
+                break;
+            }
+        
+
+        const getIndexOf = (d:Dijkstra|null):number => {
+            if(d != null)
+                for (let i = 0; i < dijkstra.length; i++){
+                    //console.log("i", i)
+                    if(dijkstra[i].node.position.distanceTo(d.node.position) < 0.25)
+                        return i;}
+            return -1;
+        };
+
+
+        let count = 0;
+
+        while(curr != -1 && count++ < 100) {
+            path.unshift(curr);
+            curr = getIndexOf(dijkstra[curr].parent)
+            //console.log(count++, curr, getIndexOf(dijkstra[curr].parent))
+        }
+
+        //console.log("count", count)
 
         return path;
+    }
+    
+
+    private static getVertice (node:Node, dijkstra:Dijkstra[]):Dijkstra|null {
+        const vertice = dijkstra.find((dij:Dijkstra) => {return (dij.node == node);})
+        if(vertice)
+            return vertice;
+        return null;
     }
 
     private getEdges(node:Node):Edge[] {
@@ -232,10 +272,3 @@ export default class Navigation {
 }
 
 
-
-interface Dijkstra {
-    node:Node,
-    parent:Node|null,
-    distance:number,
-    isVisited:boolean
-}

@@ -1,10 +1,14 @@
 import * as THREE from "three";
 import { Render } from "./render";
 import { Player } from "./player";
+import { Dijkstra, Node } from "./graph";
+import Navigation from "./navigation";
 
 export default class Movement {
 
-    public static async moveTo(player:Player, path:THREE.Vector3[], onEachStep:Function, onEndAnim:Function): Promise<any> {
+    public static async moveTo(player:Player, to:THREE.Vector3, dijkstra:Dijkstra[], onEachStep:Function, onEndAnim:Function): Promise<any> {
+        const path:number[] = Navigation.getPath_indexes(to, dijkstra)
+
         if (path.length < 2) {
             onEndAnim()
             setTimeout(onEndAnim, 20);
@@ -12,7 +16,7 @@ export default class Movement {
         }
 
         const stop_anim = () => {
-            player.object.position.set(to.x, to.y, to.z);
+            player.object.position.set(to_.x, to_.y, to_.z);
             player.object.children[0].rotation.x = 0;
             player.object.children[0].rotation.z = 0;
             onEndAnim();
@@ -23,9 +27,9 @@ export default class Movement {
         let i = -1;
         const max_step = player.velocity / 60;
     
-        let from = path[0];
-        let to = path[0];
-        let delta = new THREE.Vector3(to.x-from.x,0,to.z-from.z).normalize().multiplyScalar(max_step);
+        let from:THREE.Vector3 = dijkstra[path[0]].node.position;
+        let to_:THREE.Vector3 = dijkstra[path[0]].node.position;
+        let delta = new THREE.Vector3(to_.x-from.x,0,to_.z-from.z).normalize().multiplyScalar(max_step);
         const position = player.position.clone();
         let Distance:number = 1;
 
@@ -36,20 +40,22 @@ export default class Movement {
                 stop_anim(); return;
             }
     
-            const v2a = new THREE.Vector2(player.position.x, player.position.z), v2b = new THREE.Vector2(to.x, to.z);
+            const v2a = new THREE.Vector2(player.object.position.x, player.object.position.z),
+                  v2b = new THREE.Vector2(to_.x, to_.z);
             const distance = v2a.distanceTo(v2b);
             player.object.rotation.y = Math.atan2(delta.x, delta.z);
             if (distance <= max_step) {
-                position.copy(to);
-                player.position.copy(to);
+                position.copy(to_);
+                player.position.copy(to_);
     
                 if (++i < path.length - 1) {
-                    from = path[i];
-                    to = path[i + 1];
-                    Distance = from.distanceTo(to);
+                    from =  dijkstra[path[i]].node.position
+                    to_ =  dijkstra[path[i + 1]].node.position
+                    Distance = from.distanceTo(to_);
                     if(i>=0)
-                        onEachStep(Distance);  
-                    delta = this.delta2D(to, from).normalize().multiplyScalar(max_step);
+                        onEachStep(dijkstra[path[i+1]].distance); 
+                    
+                    delta = this.delta2D(to_, from).normalize().multiplyScalar(max_step);
                     player.object.rotation.y = Math.atan2(delta.x, delta.z);
 
                     player.object.children[0].rotation.x = 0;
@@ -58,14 +64,13 @@ export default class Movement {
 
                     if(Distance == 2)
                         anim_function = this.jump_horizontal;
-                    else if (from.y != to.y)
+                    else if (from.y != to_.y)
                         anim_function = this.jump_vertical;
                     else
                         anim_function = (player.standing?this.walk_standing:this.walk_not_standing);
-                    
                 }
             } else {
-                anim_function(player, from, to, delta, distance)
+                anim_function(player, from, to_, delta, distance)
             }
 
             Render.render();            
