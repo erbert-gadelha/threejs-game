@@ -85,6 +85,17 @@ canvas { display: block; }
         }
 
     }
+
+    #fps-hud {
+        position: fixed;
+        right: 8px;
+        top: 8px;
+        width: fit-content;
+
+        --background-color: black;
+        --color-0: white;
+        opacity: .5;
+    }
 }
 
 
