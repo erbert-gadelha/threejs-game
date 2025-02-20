@@ -7,6 +7,11 @@ import ModelLoader from "./modelLoader";
 import Movement from "./movement";
 import { Player } from "./player";
 import { Dijkstra } from "./graph";
+import { Connection } from "./connection";
+
+
+const connection = new Connection(4002)
+
 
 
 // Criar a cena

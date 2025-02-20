@@ -3,6 +3,7 @@ import { Render } from "./render";
 import { Player } from "./player";
 import Navigation from "./navigation";
 import { Dijkstra } from "./graph";
+import { Connection } from "./connection";
 
 export default class Movement {
 
@@ -10,6 +11,8 @@ export default class Movement {
 
     public static async moveTo(player:Player, to:THREE.Vector3, dijkstra:Dijkstra[], onEachStep:Function, onEndAnim:Function): Promise<any> {
         const path:number[] = Navigation.getPath_indexes(to, dijkstra)
+
+        Connection.getInstance().sendMessage(path)
 
         if (path.length < 2) {
             onEndAnim()
