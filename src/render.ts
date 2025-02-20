@@ -1,5 +1,6 @@
 import * as THREE from "three";
-import { mx_bilerp_0 } from "three/src/nodes/materialx/lib/mx_noise.js";
+import Stats from 'stats.js'
+
 
 export class Render {
     public static renderer:THREE.WebGLRenderer;
@@ -21,8 +22,19 @@ export class Render {
             renderer.setSize(width, height);
             this.render();
         });
-        
+
+        this.stats = new Stats()
+        this.stats.showPanel(0)
+        document.body.appendChild(this.stats.dom)
+        const animate = () => {
+            requestAnimationFrame(animate);
+            this.stats.update(); // Atualiza o FPS no painel
+            renderer.render(scene, camera);
+        }
+        animate();
     }
+
+    static stats:Stats;
 
     public static render() : void {
         this.renderer.render(this.scene, this.camera);

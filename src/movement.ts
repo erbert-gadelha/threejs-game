@@ -1,10 +1,12 @@
 import * as THREE from "three";
 import { Render } from "./render";
 import { Player } from "./player";
-import { Dijkstra, Node } from "./graph";
 import Navigation from "./navigation";
+import { Dijkstra } from "./graph";
 
 export default class Movement {
+
+    static clock = new THREE.Clock();
 
     public static async moveTo(player:Player, to:THREE.Vector3, dijkstra:Dijkstra[], onEachStep:Function, onEndAnim:Function): Promise<any> {
         const path:number[] = Navigation.getPath_indexes(to, dijkstra)
@@ -30,20 +32,17 @@ export default class Movement {
         let from:THREE.Vector3 = dijkstra[path[0]].node.position;
         let to_:THREE.Vector3 = dijkstra[path[0]].node.position;
         let delta = new THREE.Vector3(to_.x-from.x,0,to_.z-from.z).normalize().multiplyScalar(max_step);
+        const delta_ = new THREE.Vector3();
         const position = player.position.clone();
-        let Distance:number = 1;
 
         let anim_function:Function = this.walk_standing;
+        let distance = 0;
 
         const moveTo_anim = () => {
             if (i > path.length) {
                 stop_anim(); return;
             }
     
-            const v2a = new THREE.Vector2(player.object.position.x, player.object.position.z),
-                  v2b = new THREE.Vector2(to_.x, to_.z);
-            const distance = v2a.distanceTo(v2b);
-            player.object.rotation.y = Math.atan2(delta.x, delta.z);
             if (distance <= max_step) {
                 position.copy(to_);
                 player.position.copy(to_);
@@ -51,7 +50,7 @@ export default class Movement {
                 if (++i < path.length - 1) {
                     from =  dijkstra[path[i]].node.position
                     to_ =  dijkstra[path[i + 1]].node.position
-                    Distance = from.distanceTo(to_);
+                    distance = from.distanceTo(to_);
                     if(i>=0)
                         onEachStep(dijkstra[path[i+1]].distance); 
                     
@@ -61,16 +60,21 @@ export default class Movement {
                     player.object.children[0].rotation.x = 0;
                     player.object.children[0].rotation.z = 0;
 
-
-                    if(Distance == 2)
+                    if(distance == 2)
                         anim_function = this.jump_horizontal;
-                    else if (from.y != to_.y)
+                    else if (from.y != to_.y) {
+                        distance = 1
                         anim_function = this.jump_vertical;
+                    }
                     else
                         anim_function = (player.standing?this.walk_standing:this.walk_not_standing);
+                    this.clock.getDelta();
                 }
             } else {
-                anim_function(player, from, to_, delta, distance)
+                const deltaTime = this.clock.getDelta();
+                delta_.x = delta.x * deltaTime * 60;
+                delta_.z = delta.z * deltaTime * 60;
+                distance = anim_function(player, from, to_, delta_, distance)
             }
 
             Render.render();            
@@ -83,8 +87,9 @@ export default class Movement {
         return new THREE.Vector3(v1.x-v2.x,0,v1.z-v2.z)
     }
 
-    private static jump_vertical(player:Player, from:THREE.Vector3, to:THREE.Vector3, delta:THREE.Vector3, progress:number){
-        player.position.add(delta.clone().multiplyScalar(.7));        
+    private static jump_vertical(player:Player, from:THREE.Vector3, to:THREE.Vector3, delta:THREE.Vector3, progress:number):number{
+        
+        player.position.add(delta.clone().multiplyScalar(.7)); 
         
         const sin1 = Math.abs(Math.sin(Math.PI*progress))
         const rotation = 10;        
@@ -92,9 +97,12 @@ export default class Movement {
         player.position.copy(player.position);
         player.object.position.y = from.y*progress + to.y*(1-progress) + sin1*.5
         player.object.children[0].rotation.x = sin1*rotation*(Math.PI/180);
+
+        const dist = Math.sqrt(Math.pow(player.position.x - to.x, 2) + Math.pow(player.position.z - to.z, 2));
+        return dist;
     }
 
-    private static jump_horizontal(player:Player, from:THREE.Vector3, to:THREE.Vector3, delta:THREE.Vector3, progress:number) {
+    private static jump_horizontal(player:Player, from:THREE.Vector3, to:THREE.Vector3, delta:THREE.Vector3, progress:number):number {
         player.position.add(delta.clone().multiplyScalar(1.2)); 
         player.position.copy(player.position);
 
@@ -108,10 +116,13 @@ export default class Movement {
         else {
             const sin2 = Math.cos(Math.PI*(progress/2))
             player.object.children[0].rotation.x = sin2*15*(Math.PI/180);
-        }  
+        }
+
+        const dist = Math.sqrt(Math.pow(player.position.x - to.x, 2) + Math.pow(player.position.z - to.z, 2));
+        return dist;
     }
 
-    private static walk_standing(player:Player, from:THREE.Vector3, to:THREE.Vector3, delta:THREE.Vector3, progress:number) {
+    private static walk_standing(player:Player, from:THREE.Vector3, to:THREE.Vector3, delta:THREE.Vector3, progress:number):number {
         player.position.add(delta);
         const vel_y = .01;
         const rotation = 5;        
@@ -122,11 +133,14 @@ export default class Movement {
         player.position.copy(player.position);
         player.object.position.y = from.y*progress + sin2*vel_y + to.y*(1-progress)
         player.object.children[0].rotation.z = sin1*rotation*(Math.PI/180);
+
+        const dist = Math.sqrt(Math.pow(player.position.x - to.x, 2) + Math.pow(player.position.z - to.z, 2));
+        return dist;
     }
 
 
 
-    private static walk_not_standing(player:Player, from:THREE.Vector3, to:THREE.Vector3, delta:THREE.Vector3, progress:number) {
+    private static walk_not_standing(player:Player, from:THREE.Vector3, to:THREE.Vector3, delta:THREE.Vector3, progress:number):number {
         player.position.add(delta);
         const vel_y = .1;
         const rotation = 10;        
@@ -137,6 +151,9 @@ export default class Movement {
         player.position.copy(player.position);
         player.object.position.y = from.y*progress + sin2*vel_y + to.y*(1-progress)
         player.object.children[0].rotation.x = sin1*rotation*(Math.PI/180);
+
+        const dist = Math.sqrt(Math.pow(player.position.x - to.x, 2) + Math.pow(player.position.z - to.z, 2));
+        return dist;
     }
 
 }

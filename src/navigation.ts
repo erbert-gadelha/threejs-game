@@ -59,11 +59,15 @@ export default class Navigation {
             if(n1 && n2) {
                 this.drawLine(n1.position, n2.position)
                 const delta = n1.position.clone().sub(n2.position.clone());
+                let distance = Math.round(delta.length()*2)/2 // arredondado com precisao de 2 decimais
+
+                if(delta.y == 0 && distance > 1)
+                    distance = 2.5;
 
                 this.edges.push({
                     n1: n1,
                     n2: n2,
-                    distance: Math.round(delta.length() * 2)/2 // arredondado com precisao de 2 decimais
+                    distance: distance
                 });
 
 
