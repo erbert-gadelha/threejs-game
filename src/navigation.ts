@@ -123,7 +123,7 @@ export default class Navigation {
 
 
         const geometry = new THREE.BufferGeometry().setFromPoints([from, to]);
-        const material = new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 2, transparent: true, opacity: delta.length()*delta.length()/2/*.5*/ });
+        const material = new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 2, transparent: true, opacity: .25});
         //const material = new THREE.LineBasicMaterial({ color: 0x00ff00, linewidth: 2});
         const line = new THREE.Line(geometry, material)
         line.raycast = () => {}
@@ -139,17 +139,24 @@ export default class Navigation {
     }
 
 
-    //public findPath(origin:THREE.Vector3, target:THREE.Vector3):THREE.Vector3[] {
-    public dijkstra(origin:THREE.Vector3, target:THREE.Vector3):Dijkstra[] {
-        const path:Node[] = [];
+    public dijkstra(origin:THREE.Vector3, target:THREE.Vector3|null):Dijkstra[] {
 
         const origin_:Node|null = this.findNode(origin);
-        const target_:Node|null = this.findNode(target);
         if(origin_ == null) {
             console.error(`Não foi possível localizar o Tile de origem na posição (${origin.x}, ${origin.y}, ${origin.z})`);
             return [];
         }
-        if(target_ == null) {
+
+        let target_:Node|null = null;
+        if(target != null) {
+            target_ = this.findNode(target)
+            if(target_ == null) {
+                console.error(`Não foi possível localizar o Tile de destino na posição (${target.x}, ${target.y}, ${target.z})`);
+                return [];
+            }
+        }
+
+        if(target !=null && target_ == null) {
             console.error(`Não foi possível localizar o Tile de destino na posição (${target.x}, ${target.y}, ${target.z})`);
             return [];
         }        
@@ -188,6 +195,8 @@ export default class Navigation {
                 }
             })
 
+            if(target_ != null && vertice.node == target_)
+                break;
             unvisited = dijkstra.filter((node:Dijkstra) => { return !node.isVisited });
         }
 

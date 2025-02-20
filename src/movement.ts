@@ -19,7 +19,7 @@ export default class Movement {
             player.object.position.set(to_.x, to_.y, to_.z);
             player.object.children[0].rotation.x = 0;
             player.object.children[0].rotation.z = 0;
-            onEndAnim();
+            //onEndAnim();
             setTimeout(onEndAnim, 20);
             Render.render();
         }

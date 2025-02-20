@@ -16,7 +16,9 @@ export class Control {
     public selected:THREE.Object3D|null = null;
 
 
-    public method:Function = (param:any) => {console.log(param)};
+    public onClick:Function = (param:any) => {console.log(param)};
+    public onMove:Function = (param:any) => {console.log(param)};
+
 
     constructor(scene:THREE.Scene, camera:THREE.PerspectiveCamera, board:THREE.Object3D) {
         this.scene = scene;
@@ -53,13 +55,13 @@ export class Control {
     }
 
     // Função para detectar clique
-    public onMouseClick(event: MouseEvent) {
+    private onMouseClick(event: MouseEvent) {
         if(this.isDragging)
             return;
 
         const object:THREE.Object3D|null = this.rayCast(event);
         if (object != null)
-            this.method(object);        
+            this.onClick(object);        
     }
 
     private rayCast (event: MouseEvent):THREE.Object3D|null {
@@ -78,7 +80,7 @@ export class Control {
     }
 
 
-    public onMouseDown(event:MouseEvent) {
+    private onMouseDown(event:MouseEvent) {
         switch(event.button) {
             case 0: this.input['mouse_0'] = true; break; // left
             case 1: this.input['mouse_1'] = true; break; // middle
@@ -88,7 +90,7 @@ export class Control {
         this.lastY = event.clientY;
         this.isDragging = false;
     }
-    public onMouseUp(event:MouseEvent) {
+    private onMouseUp(event:MouseEvent) {
         switch(event.button) {
             case 0: this.input['mouse_0'] = false; break; // left
             case 1: this.input['mouse_1'] = false; break; // middle
@@ -96,7 +98,7 @@ export class Control {
         }
     }
 
-    public onMouseMove(event:MouseEvent) {
+    private onMouseMove(event:MouseEvent) {
 
         if (this.input['mouse_0']) {
             this.isDragging = true;
@@ -131,16 +133,21 @@ export class Control {
                     object.position.y + 0.5001,
                     object.position.z);
                 this.selector.visible = true;
-            } else
+                this.onMove(object)
+            } else {
                 this.selector.visible = false;
+                this.onMove(null)
+            }
 
             this.selected = object;
             this.render();
         }
 
+        
+
     }
 
-    public onMouseWheel(event:WheelEvent) {
+    private onMouseWheel(event:WheelEvent) {
         const newPosition:number = this.camera.position.z + (event.deltaY / 60);
         this.camera.position.z = this.clamp(2, newPosition, 20);
         this.render();

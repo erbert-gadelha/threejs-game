@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { mx_bilerp_0 } from "three/src/nodes/materialx/lib/mx_noise.js";
 
 export class Render {
     public static renderer:THREE.WebGLRenderer;
@@ -20,9 +21,11 @@ export class Render {
             renderer.setSize(width, height);
             this.render();
         });
+        
     }
 
     public static render() : void {
         this.renderer.render(this.scene, this.camera);
+
     }
 }
