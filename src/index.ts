@@ -1,6 +1,7 @@
-const WebSocket = require('ws');
+import { WebSocketServer } from "ws";
+
 const PORT = 4002;
-const server = new WebSocket.Server({ port: PORT });
+const server = new WebSocketServer({ port: PORT });
 let sockets: any[] = [];
 
 server.on('connection', function(socket) {
