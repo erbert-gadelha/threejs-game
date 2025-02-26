@@ -10,7 +10,8 @@ import { Dijkstra } from "./graph";
 import { Connection } from "./connection";
 
 
-const connection = new Connection(4002)
+const connection = new Connection(4002, () => connection.createCharacter("bulbassaur", new THREE.Vector3(0,0,0)))
+
 
 
 

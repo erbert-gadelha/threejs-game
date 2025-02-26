@@ -74,7 +74,9 @@ export default class Movement {
                     this.clock.getDelta();
                 }
             } else {
-                const deltaTime = this.clock.getDelta();
+                let deltaTime = this.clock.getDelta();
+                if(deltaTime > max_step)
+                    deltaTime = max_step                
                 delta_.x = delta.x * deltaTime * 60;
                 delta_.z = delta.z * deltaTime * 60;
                 distance = anim_function(player, from, to_, delta_, distance)
