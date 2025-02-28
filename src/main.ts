@@ -46,7 +46,14 @@ board.add(control.selector);
 
 
 async function createPlayer(model:string, position:THREE.Vector3|null):Promise<Player> {
-    const sprite = await ModelLoader.load(`character/${model}`);
+    const status = getStatus(model)
+    let sprite;
+    switch(status.model) {
+        case 'obj': sprite = await ModelLoader.load(`character/${model}`); break;
+        case 'gltf': sprite = await ModelLoader.LoadGLTF(model); break;
+        default: sprite = new THREE.Object3D();
+    }
+
     sprite.scale.multiplyScalar(.5)
     sprite.position.y = .5;
 
@@ -59,7 +66,6 @@ async function createPlayer(model:string, position:THREE.Vector3|null):Promise<P
 
 
 
-    const status = getStatus(model)
 
     const player_ = new THREE.Group();
     if(!position)
@@ -67,6 +73,11 @@ async function createPlayer(model:string, position:THREE.Vector3|null):Promise<P
     
     player_.add(sprite);
     player_.position.copy(position);
+
+    player_.traverse((child:any) => {
+        child.raycast = () => {}
+
+    })
 
     player_.raycast = () => {}
     sprite.raycast = () => {}
@@ -252,16 +263,19 @@ hud?.querySelector("select")?.addEventListener("change", (e:any) => {
 })
 
 
-function getStatus(model:string) {
+function getStatus(model:string):{standing:boolean,velocity:number,model:string} {
     const status = {
-        "bulbasaur": {standing: false, velocity: 3},
-        "squirtle": {standing: true, velocity: 3},
-        "charmander": {standing: true, velocity: 3},
-        "pikachu": {standing: false, velocity: 6},
-        "nidoran": {standing: false, velocity: 4},
+        "bulbasaur": {standing: false, velocity: 3, model: 'obj'},
+        "squirtle":  {standing:  true, velocity: 3, model: 'obj'},
+        "charmander":{standing:  true, velocity: 3, model: 'obj'},
+        "pikachu":   {standing: false, velocity: 6, model: 'obj'},
+        "nidoran":   {standing: false, velocity: 4, model: 'obj'},
+        "dollynho":  {standing:  true, velocity: 4, model: 'gltf'},
     }[model]
 
     if(status == null)
-        return {standing: true, velocity: 3}
+        return {standing: true, velocity: 3, model:''}
     return status
 }
+
+

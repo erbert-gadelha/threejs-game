@@ -1,12 +1,18 @@
 import * as THREE from "three";
-import { OBJLoader } from 'three-stdlib';
+import { DRACOLoader, OBJLoader } from 'three-stdlib';
 import { MTLLoader } from 'three-stdlib';
+import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
+import { Board } from "./board";
+
 
 
 
 export default class ModelLoader {
     private static mtlLoader:any = new MTLLoader();
     private static objLoader:any = new OBJLoader();
+    private static fbxLoader = new FBXLoader();
+    private static gltfLoader = new GLTFLoader();
     private static textureLoader = new THREE.TextureLoader();
     private static models: { [key: string]: THREE.Mesh } = {}
 
@@ -61,5 +67,50 @@ export default class ModelLoader {
         });
     }
     
+
+    
+    public static async LoadGLTF(model:string):Promise<THREE.Object3D> {
+
+        const cached = ModelLoader.models[model];
+        if (cached) {
+            const clone = new THREE.Mesh(cached.geometry, cached.material);
+            clone.castShadow = true;
+            clone.receiveShadow = true;
+            return new Promise((resolve) => { resolve(clone); });
+        }
+
+        const dracoLoader = new DRACOLoader();
+        dracoLoader.setDecoderPath("/draco/");      
+        this.gltfLoader.setPath(`obj/character/${model}/`);
+        this.gltfLoader.setResourcePath(`obj/character/${model}/`);
+        this.gltfLoader.setDRACOLoader(dracoLoader);
+
+
+        return new Promise((resolve, reject) => {
+
+            this.gltfLoader.load("source/model.gltf", (object:any) => {
+                object.scene.scale.set(0.035, 0.035, 0.035);
+                object.scene.position.set(0,1.5,0);
+                object.scene.traverse((child:any) => {
+                    if (child.isMesh) {
+                        if (!(object.material instanceof THREE.MeshStandardMaterial))
+                            child.material = new THREE.MeshStandardMaterial({color: child.material.color, map: child.material.map});
+                        child.castShadow = true;
+                        child.receiveShadow = true;
+                    }
+                });
+                
+                //const mixer = new THREE.AnimationMixer(object);
+                //console.log("Animações disponíveis:", object.animations.map((a:any) => a?.name));
+                //const action = mixer.clipAction(object.animations[1]); 
+                resolve(object.scene);
+            }, null, (err:any)=>{
+                console.log(err);
+                reject(null)
+            });
+
+
+        });
+    }
 
 }

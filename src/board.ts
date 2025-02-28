@@ -24,7 +24,7 @@ export class Board {
         Render.render();
     }
     
-    public add(object:THREE.Object3D) {
+    public add(object:any) {
         this.object.add(object);
         this.render();
     }
