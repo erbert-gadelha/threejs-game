@@ -2,25 +2,28 @@
 
 import { Vector3 } from "three";
 import Player from "./player";
+import environment from "./environment";
+
+
+
 
 export class Connection {
     private client:WebSocket;
-    private PORT:number;
     private ID:number = -1;
     private static connection:Connection;
+    private messageQueue:string[] = [];
+    private isConnected:boolean = false;
     public handleMessage = (message: any) => {
         console.log(message)        
     };
 
-    constructor(PORT: number, onConnection:Function|null) {
-        this.PORT = PORT;
-        this.client = new WebSocket(`ws://localhost:${PORT}`);
+    constructor() {
+        console.log(`webSocket_url "${environment.WEBSOCKET_URI}"`);
+        this.client = new WebSocket(environment.WEBSOCKET_URI);
     
-        this.client.onopen = () => {
+        this.client.onopen = (ev:Event) => {
             this.client.onmessage = this.handleMessage_;
-
-            if(onConnection)
-                onConnection();
+            this.onConnection(ev);
         };
 
         if(!Connection.connection)
@@ -28,10 +31,23 @@ export class Connection {
     }
 
 
+    private onConnection(ev:Event) {
+        this.isConnected = true;
+        this.messageQueue.forEach((message:string) => this.client.send(message));
+    }
+
+
+    private send(message:string) {
+        if(this.isConnected)
+            this.client.send(message);
+        else
+            this.messageQueue.push(message);
+    }
+
 
 
     public createCharacter(character:string, position:Vector3):void {
-        this.client.send(JSON.stringify({
+        this.send(JSON.stringify({
             action: 'CREATE',
             id: this.ID,
             character : character,
@@ -40,7 +56,7 @@ export class Connection {
     }
 
     public changeCharacter(new_character:string, new_position:Vector3):void {
-        this.client.send(JSON.stringify({
+        this.send(JSON.stringify({
             action: 'CHANGE',
             id: this.ID,
             character : new_character,
@@ -49,7 +65,7 @@ export class Connection {
     }
     
     public removeCharacter():void {
-        this.client.send(JSON.stringify({
+        this.send(JSON.stringify({
             action: 'REMOVE',
             id: this.ID
         }));
@@ -88,7 +104,7 @@ export class Connection {
     
 
     public sendMessage(message:object):void {
-        this.client.send(
+        this.send(
             JSON.stringify({
                 ...{id: this.ID},
                 ...message

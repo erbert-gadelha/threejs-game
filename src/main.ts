@@ -3,13 +3,10 @@ import { Board } from "./board";
 import { Control } from "./control";
 import { Render } from "./render";
 import Navigation from "./navigation";
-import ModelLoader from "./modelLoader";
 import Movement from "./movement";
-import Player, { PlayerStatus } from "./player";
+import Player from "./player";
 import { Dijkstra } from "./graph";
 import { Connection } from "./connection";
-
-
 
 
 
@@ -205,4 +202,4 @@ hud?.querySelector("select")?.addEventListener("change", (e:any) => {
 
 
 
-const connection = new Connection(4002, () => {})
+const connection = new Connection();

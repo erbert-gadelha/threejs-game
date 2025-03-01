@@ -19,6 +19,7 @@
     "vite": "^6.1.0"
   },
   "dependencies": {
+    "dotenv": "^16.4.7",
     "stats.js": "^0.17.0",
     "three": "^0.173.0",
     "three-stdlib": "^2.35.13",
