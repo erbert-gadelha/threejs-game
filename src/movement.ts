@@ -11,7 +11,7 @@ export default class Movement {
     public static async moveTo(player:PlayerStatus, to:THREE.Vector3, dijkstra:Dijkstra[], onEachStep:Function, onEndAnim:Function): Promise<any> {
         const path:number[] = Navigation.getPath_indexes(to, dijkstra)
 
-        Connection.getInstance().sendMessage({
+        Connection.getInstance().send({
                 action: 'MOVE',
                 path: path
             })

@@ -33,42 +33,36 @@ export class Connection {
 
     private onConnection(ev:Event) {
         this.isConnected = true;
-        this.messageQueue.forEach((message:string) => this.client.send(message));
+        this.messageQueue.forEach((message:string) => this.send(message));
     }
 
 
-    private send(message:string) {
-        if(this.isConnected)
-            this.client.send(message);
-        else
+    public send(message:any) {
+        if(this.isConnected){
+            const message_ = JSON.stringify({
+                ...{id: this.ID},
+                ...message
+            });
+
+            console.log("send", message_)
+            this.client.send(message_);
+        } else
             this.messageQueue.push(message);
     }
 
 
 
     public createCharacter(character:string, position:Vector3):void {
-        this.send(JSON.stringify({
-            action: 'CREATE',
-            id: this.ID,
-            character : character,
-            position:position
-        }));
+        console.log("connection-position", position);
+        this.send({ action: 'CREATE', character : character, position:position });
     }
 
     public changeCharacter(new_character:string, new_position:Vector3):void {
-        this.send(JSON.stringify({
-            action: 'CHANGE',
-            id: this.ID,
-            character : new_character,
-            position :new_position
-        }));
+        this.send({ action: 'CHANGE', character : new_character, position :new_position });
     }
     
     public removeCharacter():void {
-        this.send(JSON.stringify({
-            action: 'REMOVE',
-            id: this.ID
-        }));
+        this.send({ action: 'REMOVE' });
     }
 
 
@@ -87,6 +81,7 @@ export class Connection {
                 console.warn('MY-ID', message.id);
                 break;
             case "CREATE":
+                console.log("handleMessage-position", message.position)
                 Player.newEnemy(message.id, message.character, message.position, message.tile)
                 break;
             case "MOVE":
@@ -103,14 +98,14 @@ export class Connection {
 
     
 
-    public sendMessage(message:object):void {
+    /*public sendMessage(message:object):void {
         this.send(
             JSON.stringify({
                 ...{id: this.ID},
                 ...message
             })
         );
-    }
+    }*/
 
     public static getInstance():Connection {
         if(Connection.connection)

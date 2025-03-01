@@ -1,7 +1,7 @@
 const development:Environment = {
     production: false,
-    //WEBSOCKET_URI: "ws://localhost:4002",
-    WEBSOCKET_URI: "https://threejs-game-production.up.railway.app",
+    WEBSOCKET_URI: "ws://localhost:4002",
+    //WEBSOCKET_URI: "https://threejs-game-production.up.railway.app",
 }
 const production:Environment = {
     production: true,

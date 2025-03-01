@@ -21,7 +21,8 @@ export default class Player {
     
     public static async create(model:string, position:THREE.Vector3):Promise<PlayerStatus> {
         Player.current.object?.removeFromParent()
-        Connection.getInstance().createCharacter(model, position)
+        console.log("create-position", position)
+        Connection.getInstance().createCharacter(model, position.clone())
         
 
         const status = this.getStatus(model)
@@ -88,10 +89,12 @@ export default class Player {
         this.enemies.get(id)?.object.removeFromParent();
         const status = this.getStatus(model)
 
-        if(!position && tile)
-            position = Navigation.navigation.nodes[tile].position
-        else
-            position = new THREE.Vector3(0,0,0)
+        if(!position) {
+            if(tile)
+                position = Navigation.navigation.nodes[tile].position
+            else
+                position = new THREE.Vector3(0,0,0)
+        }
 
         let sprite;
         switch(status.model) {
@@ -124,9 +127,6 @@ export default class Player {
                 break;
         }
 
-        if(Board.board)
-            Board.board.add(enemyObject);
-        setInterval(() => Render.render(), 100);
 
 
         const enemy:PlayerStatus = {
@@ -136,6 +136,12 @@ export default class Player {
             standing: status.standing,
             velocity: status.velocity
         };
+
+        console.warn("enemy-object-position", enemyObject.position)
+
+        if(Board.board)
+            Board.board.add(enemyObject);
+        setInterval(() => Render.render(), 100);
 
         this.enemies.set(id, enemy);
         return enemy;
