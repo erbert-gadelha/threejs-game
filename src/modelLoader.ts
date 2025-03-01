@@ -1,9 +1,6 @@
 import * as THREE from "three";
 import { DRACOLoader, OBJLoader } from 'three-stdlib';
-import { MTLLoader } from 'three-stdlib';
-import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader";
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
-import { Board } from "./board";
+import { MTLLoader, GLTFLoader } from 'three-stdlib';
 
 
 
@@ -11,7 +8,6 @@ import { Board } from "./board";
 export default class ModelLoader {
     private static mtlLoader:any = new MTLLoader();
     private static objLoader:any = new OBJLoader();
-    private static fbxLoader = new FBXLoader();
     private static gltfLoader = new GLTFLoader();
     private static textureLoader = new THREE.TextureLoader();
     private static models: { [key: string]: THREE.Mesh } = {}
@@ -104,7 +100,7 @@ export default class ModelLoader {
                 //console.log("Animações disponíveis:", object.animations.map((a:any) => a?.name));
                 //const action = mixer.clipAction(object.animations[1]); 
                 resolve(object.scene);
-            }, null, (err:any)=>{
+            }, ()=>{}, (err:any)=>{
                 console.log(err);
                 reject(null)
             });

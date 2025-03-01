@@ -208,9 +208,6 @@ export default class Navigation {
 
     }
 
-    public static getPositions(path:number[]):THREE.Vector3[] {
-        return [];
-    }
 
     public static getPath(to:THREE.Vector3, dijkstra:Dijkstra[]):THREE.Vector3[] {
         const path:THREE.Vector3[] = [];

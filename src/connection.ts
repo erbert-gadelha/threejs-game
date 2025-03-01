@@ -21,9 +21,9 @@ export class Connection {
         console.log(`webSocket_url "${environment.WEBSOCKET_URI}"`);
         this.client = new WebSocket(environment.WEBSOCKET_URI);
     
-        this.client.onopen = (ev:Event) => {
+        this.client.onopen = (/*ev:Event*/) => {
             this.client.onmessage = this.handleMessage_;
-            this.onConnection(ev);
+            this.onConnection(/*ev*/);
         };
 
         if(!Connection.connection)
@@ -31,7 +31,7 @@ export class Connection {
     }
 
 
-    private onConnection(ev:Event) {
+    private onConnection(/*ev:Event*/) {
         this.isConnected = true;
         this.messageQueue.forEach((message:string) => this.send(message));
     }

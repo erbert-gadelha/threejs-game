@@ -113,6 +113,12 @@ function drawLines(indexes:number[]):void {
 
 
 function onEndAnim ():void {
+    (async () => {
+        const audio = new Audio('/threejs-game/sounds/snow-step.mp3');
+        audio.volume = .3;
+        audio.currentTime = 0.05;
+        audio.play();
+    })()
     lines?.removeFromParent()
     if(Player.current) {
         running_anim = null;
@@ -123,6 +129,7 @@ function onEndAnim ():void {
 };
 
 function onEachStep (consumed_stamina:number):void {
+    Movement.playStep();
 
     // REMOVE AS LINHAS DESENHADAS
     if(lines) {
@@ -202,4 +209,4 @@ hud?.querySelector("select")?.addEventListener("change", (e:any) => {
 
 
 
-const connection = new Connection();
+new Connection();
