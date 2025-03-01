@@ -4,8 +4,8 @@ import {Node, Edge, Dijkstra} from "./graph"
 
 export default class Navigation {
     private board:Board|null = null;
-    private navigation:Navigation|null = null;
-    private nodes:Node[] = [];
+    public static navigation:Navigation = new Navigation(null);
+    public nodes:Node[] = [];
     private edges:Edge[] = [];
     private currNode:Node|null = null;
 
@@ -13,8 +13,8 @@ export default class Navigation {
         if(board)
             this.set(board);
 
-        if(this.navigation)
-            this.navigation = this;
+        if(Navigation.navigation)
+            Navigation.navigation = this;
     }
 
     public findNode(position: THREE.Vector3): Node | null {
@@ -135,11 +135,11 @@ export default class Navigation {
             this.board.add(line);
     }
 
-    public getInstance():Navigation {
-        if(this.navigation)
-            return this.navigation;        
-        this.navigation = new Navigation(null);
-        return this.navigation;
+    public static getInstance():Navigation {
+        if(Navigation.navigation)
+            return Navigation.navigation;        
+        Navigation.navigation = new Navigation(null);
+        return Navigation.navigation;
     }
 
 
@@ -206,6 +206,10 @@ export default class Navigation {
 
         return dijkstra;
 
+    }
+
+    public static getPositions(path:number[]):THREE.Vector3[] {
+        return [];
     }
 
     public static getPath(to:THREE.Vector3, dijkstra:Dijkstra[]):THREE.Vector3[] {

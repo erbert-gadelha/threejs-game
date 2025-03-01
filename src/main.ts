@@ -5,12 +5,11 @@ import { Render } from "./render";
 import Navigation from "./navigation";
 import ModelLoader from "./modelLoader";
 import Movement from "./movement";
-import { Player } from "./player";
+import Player, { PlayerStatus } from "./player";
 import { Dijkstra } from "./graph";
 import { Connection } from "./connection";
 
 
-const connection = new Connection(4002, () => connection.createCharacter("bulbassaur", new THREE.Vector3(0,0,0)))
 
 
 
@@ -37,7 +36,7 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
 Render.set(renderer, scene, camera);
 const board:Board = new Board(scene);
-let player:Player|null;
+//let playerStatus:PlayerStatus|null;
 
 
 
@@ -45,60 +44,7 @@ const control:Control = new Control(scene, camera, new THREE.Mesh());
 board.add(control.selector);
 
 
-async function createPlayer(model:string, position:THREE.Vector3|null):Promise<Player> {
-    const status = getStatus(model)
-    let sprite;
-    switch(status.model) {
-        case 'obj': sprite = await ModelLoader.load(`character/${model}`); break;
-        case 'gltf': sprite = await ModelLoader.LoadGLTF(model); break;
-        default: sprite = new THREE.Object3D();
-    }
 
-    sprite.scale.multiplyScalar(.5)
-    sprite.position.y = .5;
-
-    const stamina_element = document.querySelector("#stamina-status");
-    if (stamina_element && player) {
-        if(player)
-            stamina_element.classList.remove(player.name);   
-        stamina_element.classList.add(model);   
-    }
-
-
-
-
-    const player_ = new THREE.Group();
-    if(!position)
-        position = new THREE.Vector3(0,0,0)
-    
-    player_.add(sprite);
-    player_.position.copy(position);
-
-    player_.traverse((child:any) => {
-        child.raycast = () => {}
-
-    })
-
-    player_.raycast = () => {}
-    sprite.raycast = () => {}
-
-    switch (model) {
-        case 'charmander':
-            const light:THREE.Light = new THREE.PointLight(0xffaa00, .5, 0, 2)
-            light.position.copy(new THREE.Vector3(0,1.1,-.4));
-            player_.add(light)
-            break;
-    }
-
-
-    return {
-        name: model,
-        object: player_,
-        position: player_.position,
-        standing: status.standing,
-        velocity: status.velocity
-    };
-}
 
 
 
@@ -115,7 +61,7 @@ control.onClick = async (object:THREE.Object3D) => {
         return;
     
     const to = object.position.clone();
-    running_anim = Movement.moveTo(getPlayer(), to, dijkstra, onEachStep, onEndAnim)//, onEachStep)
+    running_anim = Movement.moveTo(Player.current, to, dijkstra, onEachStep, onEndAnim)//, onEachStep)
 };
 
 
@@ -171,10 +117,10 @@ function drawLines(indexes:number[]):void {
 
 function onEndAnim ():void {
     lines?.removeFromParent()
-    if(player) {
+    if(Player.current) {
         running_anim = null;
-        player.position.copy(player.object.position);
-        dijkstra = navigation.dijkstra(player.position, null);
+        Player.current.position.copy(Player.current.object.position);
+        dijkstra = navigation.dijkstra(Player.current.position, null);
     }
     Render.render()
 };
@@ -194,11 +140,11 @@ function onEachStep (consumed_stamina:number):void {
         element.innerText = consumed_stamina.toFixed(1)
 }
 
-function getPlayer():Player {
-    if (player)
-        return player;
+/*function getPlayer():PlayerStatus {
+    if (Player.current)
+        return Player.current;
     return {name: "null", object: new THREE.Mesh(), position: new THREE.Vector3(), standing: true, velocity: 10}
-}
+}*/
 
 
 
@@ -223,24 +169,18 @@ start("bulbasaur");
 async function start(pokemon:"bulbasaur"|"squirtle"|"charmander"|"pikachu"|"nidoran") {
     const boardObject:THREE.Object3D = await createMap();
     control.setBoardObject(boardObject);
-    player = await createPlayer(pokemon,  new THREE.Vector3(0,1,0));    
-    board.add(player.object);
+    
+    await Player.create(pokemon,  new THREE.Vector3(0,1,0));
     navigation.set(board)
 
-    dijkstra = navigation.dijkstra(player.position, null);
-
+    dijkstra = navigation.dijkstra(Player.current.position, null);
 }
 
 
 async function reset(model:string) {
-    getPlayer().object?.removeFromParent()
     running_anim = null;
-    player = await createPlayer(model,  new THREE.Vector3(0,1,0));
-    board.add(player.object);
-    setInterval(() => Render.render(), 100);
-
-    dijkstra = navigation.dijkstra(player.position, null);
-
+    await Player.create(model,  new THREE.Vector3(0,1,0));
+    dijkstra = navigation.dijkstra(Player.current.position, null);
 }
 
 
@@ -263,19 +203,6 @@ hud?.querySelector("select")?.addEventListener("change", (e:any) => {
 })
 
 
-function getStatus(model:string):{standing:boolean,velocity:number,model:string} {
-    const status = {
-        "bulbasaur": {standing: false, velocity: 3, model: 'obj'},
-        "squirtle":  {standing:  true, velocity: 3, model: 'obj'},
-        "charmander":{standing:  true, velocity: 3, model: 'obj'},
-        "pikachu":   {standing: false, velocity: 6, model: 'obj'},
-        "nidoran":   {standing: false, velocity: 4, model: 'obj'},
-        "dollynho":  {standing:  true, velocity: 4, model: 'gltf'},
-    }[model]
-
-    if(status == null)
-        return {standing: true, velocity: 3, model:''}
-    return status
-}
 
 
+const connection = new Connection(4002, () => {})

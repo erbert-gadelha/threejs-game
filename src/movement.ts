@@ -1,18 +1,20 @@
 import * as THREE from "three";
 import { Render } from "./render";
-import { Player } from "./player";
+import { PlayerStatus } from "./player";
 import Navigation from "./navigation";
 import { Dijkstra } from "./graph";
 import { Connection } from "./connection";
 
 export default class Movement {
 
-    static clock = new THREE.Clock();
 
-    public static async moveTo(player:Player, to:THREE.Vector3, dijkstra:Dijkstra[], onEachStep:Function, onEndAnim:Function): Promise<any> {
+    public static async moveTo(player:PlayerStatus, to:THREE.Vector3, dijkstra:Dijkstra[], onEachStep:Function, onEndAnim:Function): Promise<any> {
         const path:number[] = Navigation.getPath_indexes(to, dijkstra)
 
-        Connection.getInstance().sendMessage(path)
+        Connection.getInstance().sendMessage({
+                action: 'MOVE',
+                path: path
+            })
 
         if (path.length < 2) {
             onEndAnim()
@@ -29,24 +31,23 @@ export default class Movement {
             Render.render();
         }
 
-        let i = -1;
-        const max_step = player.velocity / 60;
-    
+        let i = -1;    
         let from:THREE.Vector3 = dijkstra[path[0]].node.position;
         let to_:THREE.Vector3 = dijkstra[path[0]].node.position;
-        let delta = new THREE.Vector3(to_.x-from.x,0,to_.z-from.z).normalize().multiplyScalar(max_step);
+        let delta = new THREE.Vector3(to_.x-from.x,0,to_.z-from.z).normalize();
         const delta_ = new THREE.Vector3();
         const position = player.position.clone();
 
         let anim_function:Function = this.walk_standing;
         let distance = 0;
+        const clock = new THREE.Clock();
 
         const moveTo_anim = () => {
             if (i > path.length) {
                 stop_anim(); return;
             }
     
-            if (distance <= max_step) {
+            if (distance <= player.velocity/30) {
                 position.copy(to_);
                 player.position.copy(to_);
     
@@ -57,7 +58,7 @@ export default class Movement {
                     if(i>=0)
                         onEachStep(dijkstra[path[i+1]].distance); 
                     
-                    delta = this.delta2D(to_, from).normalize().multiplyScalar(max_step);
+                    delta = this.delta2D(to_, from).normalize()//.multiplyScalar(max_step);
                     player.object.rotation.y = Math.atan2(delta.x, delta.z);
 
                     player.object.children[0].rotation.x = 0;
@@ -71,14 +72,90 @@ export default class Movement {
                     }
                     else
                         anim_function = (player.standing?this.walk_standing:this.walk_not_standing);
-                    this.clock.getDelta();
+                    clock.getDelta();
                 }
             } else {
-                let deltaTime = this.clock.getDelta();
-                if(deltaTime > max_step)
-                    deltaTime = max_step                
-                delta_.x = delta.x * deltaTime * 60;
-                delta_.z = delta.z * deltaTime * 60;
+                let vel_ = Math.min(distance, clock.getDelta()*100)/10;
+                delta_.x = delta.x * vel_;
+                delta_.z = delta.z * vel_;
+                distance = anim_function(player, from, to_, delta_, distance)
+            }
+
+            Render.render();            
+            requestAnimationFrame(() => moveTo_anim());
+        }
+        moveTo_anim();
+    }
+
+    public static async moveFromPath(player:PlayerStatus, path:number[]): Promise<any> {
+        if (path.length < 2)
+            return;
+        
+
+        const stop_anim = () => {
+            player.object.position.set(to_.x, to_.y, to_.z);
+            player.object.children[0].rotation.x = 0;
+            player.object.children[0].rotation.z = 0;
+            Render.render();
+        }
+
+        let i = -1;
+
+        //console.log("dijikstra", Navigation.navigation.nodes)
+
+
+        let from:THREE.Vector3 = Navigation.navigation.nodes[path[0]].position;
+        let to_:THREE.Vector3 = Navigation.navigation.nodes[path[0]].position;
+        let delta = new THREE.Vector3(to_.x-from.x,0,to_.z-from.z).normalize();
+        const delta_ = new THREE.Vector3();
+        const position = player.position.clone();
+
+        let anim_function:Function = this.walk_standing;
+        let distance = 0;
+        const clock = new THREE.Clock();
+
+        const moveTo_anim = () => {
+            if (i > path.length) {
+                stop_anim(); return;
+            }
+    
+            if (distance <= player.velocity/30) {
+                position.copy(to_);
+                player.position.copy(to_);
+    
+                if (++i < path.length - 1) {
+                    from =  Navigation.navigation.nodes[path[i]].position
+                    to_ =  Navigation.navigation.nodes[path[i+1]].position
+                    distance = from.distanceTo(to_);
+                    /*if(i>=0)
+                        onEachStep(dijkstra[path[i+1]].distance); */
+                    
+                    delta = this.delta2D(to_, from).normalize()//.multiplyScalar(max_step);
+                    player.object.rotation.y = Math.atan2(delta.x, delta.z);
+
+                    player.object.children[0].rotation.x = 0;
+                    player.object.children[0].rotation.z = 0;
+
+                    if(distance == 2)
+                        anim_function = this.jump_horizontal;
+                    else if (from.y != to_.y) {
+                        distance = 1
+                        anim_function = this.jump_vertical;
+                    }
+                    else
+                        anim_function = (player.standing?this.walk_standing:this.walk_not_standing);
+                    clock.getDelta();
+                }
+            } else {
+                let vel_ = Math.min(distance, clock.getDelta()*100)/10;
+                delta_.x = delta.x * vel_;
+                delta_.z = delta.z * vel_;
+
+                /*console.log({
+                    dist: distance,
+                    norm: delta_.length(),
+                })*/
+
                 distance = anim_function(player, from, to_, delta_, distance)
             }
 
@@ -92,7 +169,7 @@ export default class Movement {
         return new THREE.Vector3(v1.x-v2.x,0,v1.z-v2.z)
     }
 
-    private static jump_vertical(player:Player, from:THREE.Vector3, to:THREE.Vector3, delta:THREE.Vector3, progress:number):number{
+    private static jump_vertical(player:PlayerStatus, from:THREE.Vector3, to:THREE.Vector3, delta:THREE.Vector3, progress:number):number{
         
         player.position.add(delta.clone().multiplyScalar(.7)); 
         
@@ -107,7 +184,7 @@ export default class Movement {
         return dist;
     }
 
-    private static jump_horizontal(player:Player, from:THREE.Vector3, to:THREE.Vector3, delta:THREE.Vector3, progress:number):number {
+    private static jump_horizontal(player:PlayerStatus, from:THREE.Vector3, to:THREE.Vector3, delta:THREE.Vector3, progress:number):number {
         player.position.add(delta.clone().multiplyScalar(1.2)); 
         player.position.copy(player.position);
 
@@ -127,7 +204,7 @@ export default class Movement {
         return dist;
     }
 
-    private static walk_standing(player:Player, from:THREE.Vector3, to:THREE.Vector3, delta:THREE.Vector3, progress:number):number {
+    private static walk_standing(player:PlayerStatus, from:THREE.Vector3, to:THREE.Vector3, delta:THREE.Vector3, progress:number):number {
         player.position.add(delta);
         const vel_y = .01;
         const rotation = 5;        
@@ -145,7 +222,7 @@ export default class Movement {
 
 
 
-    private static walk_not_standing(player:Player, from:THREE.Vector3, to:THREE.Vector3, delta:THREE.Vector3, progress:number):number {
+    private static walk_not_standing(player:PlayerStatus, from:THREE.Vector3, to:THREE.Vector3, delta:THREE.Vector3, progress:number):number {
         player.position.add(delta);
         const vel_y = .1;
         const rotation = 10;        

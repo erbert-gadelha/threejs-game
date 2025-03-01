@@ -11,6 +11,8 @@ export class Board {
     public size:number = 0;
     private ONE_BLOCK_DOWN:THREE.Mesh = new THREE.Mesh();
 
+    public static board:Board|null;
+
 
     public getNodes():(Node|null)[][][] {
         return this.nodes;
@@ -18,6 +20,7 @@ export class Board {
 
     constructor(scene:THREE.Scene) {
         this.scene = scene;
+        Board.board = this;
     }
 
     private render():void {
