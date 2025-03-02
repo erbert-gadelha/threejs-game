@@ -5,6 +5,7 @@ import { Render } from "./render";
 import { Connection } from "./connection";
 import Movement from "./movement";
 import Navigation from "./navigation";
+import { CSS2DRenderer, CSS2DObject } from "three/examples/jsm/renderers/CSS2DRenderer.js";
 
 
 export default class Player {
@@ -14,13 +15,15 @@ export default class Player {
         object: new THREE.Object3D(),
         position: new THREE.Vector3(),
         standing: true,
-        velocity: 10
+        velocity: 10,
+        label: null
     };
 
 
     
     public static async create(model:string, position:THREE.Vector3):Promise<PlayerStatus> {
         Player.current.object?.removeFromParent()
+        Player.current.label?.removeFromParent();
         console.log("create-position", position)
         Connection.getInstance().createCharacter(model, position.clone())
         
@@ -72,21 +75,34 @@ export default class Player {
         if(Board.board)
             Board.board.add(playerObject);
 
+        const label = Player.CreateLabel('me');
+        playerObject.add(label);
+
         setInterval(() => Render.render(), 100);
         this.current = {
             name: model,
             object: playerObject,
             position: playerObject.position,
             standing: status.standing,
-            velocity: status.velocity
+            velocity: status.velocity,
+            label: label
         };
+
         return this.current;
     }
 
     private static enemies:Map<number, PlayerStatus> = new Map();
 
     public static async newEnemy(id:number, model:string, position:THREE.Vector3|null|undefined, tile:number|null):Promise<PlayerStatus> {
-        this.enemies.get(id)?.object.removeFromParent();
+        const prevEnemy = this.enemies.get(id)
+        if(prevEnemy) {
+            if(prevEnemy.label) {
+                console.log('label', prevEnemy.label)
+                prevEnemy.object.remove(prevEnemy.label);
+                prevEnemy.label.removeFromParent();
+            }
+            prevEnemy.object.removeFromParent();            
+        }
         const status = this.getStatus(model)
 
         if(!position) {
@@ -129,15 +145,19 @@ export default class Player {
 
 
 
+        console.warn("enemy-object-position", enemyObject.position)
+        const label = Player.CreateLabel(`player ${id}`);
+        enemyObject.add(label);
+        
         const enemy:PlayerStatus = {
             name: model,
             object: enemyObject,
             position: enemyObject.position,
             standing: status.standing,
-            velocity: status.velocity
+            velocity: status.velocity,
+            label: label
         };
 
-        console.warn("enemy-object-position", enemyObject.position)
 
         if(Board.board)
             Board.board.add(enemyObject);
@@ -149,10 +169,15 @@ export default class Player {
 
 
     public static removeEnemy(id:number) {
-        const enemy = this.enemies.get(id)
+        const enemy = this.enemies.get(id)        
         if(!enemy) {
-            console.warn('objeto [Enemy] inexistente')
-            return;
+            console.warn('objeto [Enemy] inexistente'); return;
+        }
+
+        if(enemy.label) {
+            console.log('label', enemy.label)
+            enemy.object.remove(enemy.label);
+            enemy.label.removeFromParent();
         }
         enemy.object.removeFromParent();
         this.enemies.delete(id);
@@ -180,6 +205,40 @@ export default class Player {
             return {standing: true, velocity: 3, model:''}
         return status
     }
+
+
+    private static labelRenderer:CSS2DRenderer|undefined;
+    private static CreateLabel(text:string):CSS2DObject {
+        const nameDiv = document.createElement("div");
+        nameDiv.className = "player-name";
+        nameDiv.textContent = text;
+
+
+        const nameLabel = new CSS2DObject(nameDiv);
+        if(text === 'me')
+            nameLabel.position.set(0, 1.5, 0);
+        else
+            nameLabel.position.set(0, 3, 0);
+        
+
+        if(!Player.labelRenderer) {
+            const labelRenderer = new CSS2DRenderer();
+            labelRenderer.setSize(window.innerWidth, window.innerHeight);
+            labelRenderer.domElement.style.position = "absolute";
+            labelRenderer.domElement.style.top = "0px";
+            labelRenderer.domElement.classList.add("player-names");
+            document.body.appendChild(labelRenderer.domElement);
+
+            const anim = () => {
+                requestAnimationFrame(anim);        
+                labelRenderer.render(Render.scene, Render.camera);
+            }    
+            anim();
+        }
+
+        return nameLabel;
+
+    }
     
 
 };
@@ -189,6 +248,7 @@ export interface PlayerStatus {
     object: THREE.Object3D,
     position: THREE.Vector3,
     standing: boolean,
-    velocity: number
+    velocity: number,
+    label: CSS2DObject|null
 }
 

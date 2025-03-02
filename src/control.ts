@@ -1,5 +1,7 @@
 import * as THREE from "three";
 import { Render } from "./render";
+import Player from "./player";
+import { Board } from "./board";
 
 
 export class Control {
@@ -218,6 +220,16 @@ export class Control {
 
         this.render();
         
+    }
+
+
+
+    public worldToScreen(worldPosition: THREE.Vector3):{screenX:number, screenY:number} {
+        let pos:THREE.Vector3 = worldPosition.clone();   
+        pos.project(this.camera);
+        const screenX = (pos.x * 0.5 + 0.5) * window.innerWidth;
+        const screenY = (1 - ((pos.y +.3) * 0.5 + 0.5)) * window.innerHeight;
+        return { screenX: screenX, screenY: screenY };
     }
 
 
