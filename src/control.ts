@@ -1,7 +1,5 @@
 import * as THREE from "three";
 import { Render } from "./render";
-import Player from "./player";
-import { Board } from "./board";
 
 
 export class Control {
@@ -16,6 +14,11 @@ export class Control {
     private board:THREE.Object3D;
     public selector:THREE.Object3D;
     public selected:THREE.Object3D|null = null;
+    private static control:Control|undefined;
+
+    public static getInstance():Control|null {
+        return Control.control?Control.control:null;
+    }
 
 
     public onClick:Function = (param:any) => {console.log(param)};
@@ -26,6 +29,8 @@ export class Control {
         this.scene = scene;
         this.camera = camera;
         this.board = board;
+
+        Control.control = this;
 
 
         const material:THREE.MeshBasicMaterial =  new THREE.MeshBasicMaterial({   
@@ -52,13 +57,18 @@ export class Control {
 
     }
 
+    private isActive:boolean = true;
+    public setActive(active:boolean) {
+        this.isActive = active;
+    }
+
     public setBoardObject(object:THREE.Object3D):void {
         this.board = object;
     }
 
     // Função para detectar clique
     private onMouseClick(event: MouseEvent) {
-        if(this.isDragging)
+        if(!this.isActive || this.isDragging)
             return;
 
         const object:THREE.Object3D|null = this.rayCast(event);
@@ -101,6 +111,8 @@ export class Control {
     }
 
     private onMouseMove(event:MouseEvent) {
+        if(!this.isActive)
+            return;
 
         if (this.input['mouse_0']) {
             this.isDragging = true;

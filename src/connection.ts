@@ -32,6 +32,10 @@ export class Connection {
 
 
     private onConnection(/*ev:Event*/) {
+        console.warn("conectado!")
+    }
+
+    private onServerMessage(message:object) {
         this.isConnected = true;
         this.messageQueue.forEach((message:string) => this.send(message));
     }
@@ -68,12 +72,13 @@ export class Connection {
 
 
     private async handleMessage_ (/*this_: WebSocket, */ ev: MessageEvent<any>) {
-        const message:{id:number, action:string, character:string, position: Vector3, players:any[], tile:number, path:number[]} = JSON.parse(ev.data)
+        const message:SocketMessage = JSON.parse(ev.data)
         console.log("message", message)
 
         switch (message.action) {
             case "SERVER":
                 Connection.getInstance().ID = message.id;
+                Connection.getInstance().onServerMessage(message);
                 setTimeout(()=>
                     message.players.forEach((enemy:EnemyInfo) => Player.newEnemy(enemy.id, enemy.character, enemy.position, enemy.tile)),
                 500);
@@ -87,11 +92,10 @@ export class Connection {
             case "MOVE":
                 Player.moveEnemy(message.id,  message.path)
                 break;
-            case "CHANGE":
-
-            console.log(`mudar boneco de id(${message.id}) para (${message.character})`); break;
             case "REMOVE":
                 Player.removeEnemy(message.id); break;
+            case "MESSAGE":
+                Player.showMessage(message.id, message.content); break;
         }
 
     };
@@ -128,4 +132,16 @@ interface EnemyInfo {
     character:string,
     position: Vector3,
     tile:number
+}
+
+
+interface SocketMessage {
+    id:number,
+    action:string,
+    character:string,
+    position: Vector3,
+    players:any[],
+    tile:number,
+    path:number[],
+    content:string
 }

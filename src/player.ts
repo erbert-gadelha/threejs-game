@@ -6,6 +6,7 @@ import { Connection } from "./connection";
 import Movement from "./movement";
 import Navigation from "./navigation";
 import { CSS2DRenderer, CSS2DObject } from "three/examples/jsm/renderers/CSS2DRenderer.js";
+import { Control } from "./control";
 
 
 export default class Player {
@@ -75,7 +76,7 @@ export default class Player {
         if(Board.board)
             Board.board.add(playerObject);
 
-        const label = Player.CreateLabel('me');
+        const label = Player.CreateLabel(null);
         playerObject.add(label);
 
         setInterval(() => Render.render(), 100);
@@ -206,32 +207,93 @@ export default class Player {
         return status
     }
 
+    public static showMessage(id:number, message:string) {
+        const enemy = Player.enemies.get(id);
+        if(!enemy)
+            return;
+
+        if(enemy.label){
+            const div = enemy.label.element.querySelector("div");
+            const span = document.createElement('span');
+            span.textContent = message;
+    
+            div?.append(span)
+            setTimeout(() => {
+                div?.removeChild(span);
+            }, 5000)
+        }
+    }
+
 
     private static labelRenderer:CSS2DRenderer|undefined;
-    private static CreateLabel(text:string):CSS2DObject {
+    private static CreateLabel(text:string|null):CSS2DObject {
         const nameDiv = document.createElement("div");
-        nameDiv.className = "player-name";
-        nameDiv.textContent = text;
-
-
         const nameLabel = new CSS2DObject(nameDiv);
-        if(text === 'me')
-            nameLabel.position.set(0, 1.5, 0);
-        else
+
+
+        if(text) {
+            const div = document.createElement('div');
+            nameDiv.append(div);
             nameLabel.position.set(0, 3, 0);
+            nameDiv.className = "enemy-name";
+        } else {
+            nameDiv.className = "player-name";
+            console.log("ELSE");
+            const span = document.createElement("span");
+            span.textContent = '…';
+            const input = document.createElement("input");
+            input.type = "text";
+            input.placeholder = "…";
+            input.hidden = true;
+            input.maxLength = 64;
+            nameDiv.append(input, span);
+
+
+            const focusOn = (onInput:boolean) => {
+                span.hidden = onInput;
+                input.hidden = !onInput;
+                if(onInput)
+                    input.focus();
+                else {
+                    input.value = "";
+                }
+            }
+
+
+            input.addEventListener('blur', () => focusOn(false))
+            input.addEventListener('keydown', (e:KeyboardEvent) => {
+                if(e.key === 'Enter') {
+                    const value = input.value;
+                    focusOn(false);
+
+                    Connection.getInstance().send({
+                        action:'MESSAGE',
+                        content:value,
+                    });
+                }
+            })
+            nameDiv.addEventListener('click', () => focusOn(true))
+            nameDiv.addEventListener('mouseenter', () => Control.getInstance()?.setActive(false))
+            nameDiv.addEventListener('mouseleave', () => Control.getInstance()?.setActive(true))
+
+            nameLabel.position.set(0, 1.5, 0);
+        }
         
 
         if(!Player.labelRenderer) {
-            const labelRenderer = new CSS2DRenderer();
-            labelRenderer.setSize(window.innerWidth, window.innerHeight);
-            labelRenderer.domElement.style.position = "absolute";
-            labelRenderer.domElement.style.top = "0px";
-            labelRenderer.domElement.classList.add("player-names");
-            document.body.appendChild(labelRenderer.domElement);
+
+            console.log("new label rend")
+
+            Player.labelRenderer = new CSS2DRenderer();
+            Player.labelRenderer.setSize(window.innerWidth, window.innerHeight);
+            Player.labelRenderer.domElement.style.position = "absolute";
+            Player.labelRenderer.domElement.style.top = "0px";
+            Player.labelRenderer.domElement.classList.add("player-names");
+            document.body.appendChild(Player.labelRenderer.domElement);
 
             const anim = () => {
                 requestAnimationFrame(anim);        
-                labelRenderer.render(Render.scene, Render.camera);
+                Player.labelRenderer?.render(Render.scene, Render.camera);
             }    
             anim();
         }
