@@ -35,7 +35,7 @@ export class Connection {
         console.warn("conectado!")
     }
 
-    private onServerMessage(message:object) {
+    private onServerMessage(/*message:object*/) {
         this.isConnected = true;
         this.messageQueue.forEach((message:string) => this.send(message));
 
@@ -86,7 +86,7 @@ export class Connection {
         switch (message.action) {
             case "SERVER":
                 Connection.getInstance().ID = message.id;
-                Connection.getInstance().onServerMessage(message);
+                Connection.getInstance().onServerMessage(/*message*/);
                 setTimeout(()=>
                     message.players.forEach((enemy:EnemyInfo) => Player.newEnemy(enemy.id, enemy.character, enemy.position, enemy.tile)),
                 500);

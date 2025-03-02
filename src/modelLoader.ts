@@ -26,7 +26,7 @@ export default class ModelLoader {
 
         const cached = ModelLoader.models[model];
         if (cached) {
-            const clone = new THREE.Mesh(cached.geometry, cached.material);
+            const clone = new THREE.Mesh(cached.geometry.clone(), cached.material);
             clone.castShadow = true;
             clone.receiveShadow = true;
             return new Promise((resolve) => { resolve(clone); });
