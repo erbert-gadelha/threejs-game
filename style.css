@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Press+Start+2P&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&family=Pixelify+Sans:wght@400..700&display=swap');
 
 :root {
     --message-top: 300px;
@@ -21,12 +22,128 @@ canvas { display: block; }
 .player-names {
     pointer-events: none;
 }
+
+
+
+.enemy-name {
+    pointer-events: none;
+    position: relative;
+
+    font-family: "Lexend", serif;
+    font-optical-sizing: auto;
+    font-style: normal;
+
+
+    div {
+        position: absolute;
+        display: flex;
+        flex-direction: column;
+        bottom: 100%;
+        transform: translateX(-50%);
+        gap: 4px;
+        max-width: 500px;
+        width: max-content;
+        justify-content: center;
+        align-items: center;
+
+
+        span {
+            font-family: "Lexend", serif;
+            font-optical-sizing: auto;
+            font-style: normal;
+            color: white;
+            pointer-events: none;
+            position: static;
+            font-size: .64rem;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 4px 8px;
+            border-radius: 5px;
+            width: fit-content;
+            margin: auto;
+
+            animation: messageFadeOut 5s linear forwards;
+        }
+    }
+}
+
+
+@keyframes messageFadeOut {
+    0% {
+        opacity: 0;
+    } 3%, 97% {
+        opacity: 1;
+    } 100% {
+        opacity: 0;
+    }
+}
+
 .player-name {
+    pointer-events: all;
+    position: relative;
+    position: static;
+
+    font-family: "Lexend", serif;
+    font-style: normal;
     color: white;
+    
     font-size: .64rem;
     background-color: rgba(0, 0, 0, 0.5);
     padding: 4px 8px;
     border-radius: 5px;
+    width: fit-content;
+
+    cursor: pointer;
+
+    input {
+        font-family: "Lexend", serif;
+        font-optical-sizing: auto;
+        font-style: normal;
+        width: auto;
+        min-width: 20px;
+        border: none;
+        outline: none;
+
+        background-color: transparent;
+
+        font-size: .8rem;
+        color: rgb(255, 206, 116);
+    }
+
+
+    div {
+        position: absolute;
+        display: flex;
+        flex-direction: column;
+        bottom: 100%;
+        left: 50%;
+        margin-bottom: 2px;
+        gap: 2px;
+        max-width: 500px;
+        width: max-content;
+        justify-content: center;
+        align-items: center;
+        min-width: 100%;
+        width: max-content;
+        transform: translateX(-50%);
+        height: fit-content;
+
+
+        span {
+            font-family: "Lexend", serif;
+            font-optical-sizing: auto;
+            font-style: normal;
+            color: white;
+            pointer-events: none;
+            position: static;
+            font-size: .64rem;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 4px 8px;
+            border-radius: 5px;
+            width: max-content;
+
+            animation: messageFadeOut 5s linear forwards;
+        }
+    }
 
 }
 
@@ -40,8 +157,6 @@ canvas { display: block; }
     color: white;
     top: var(--message-top);
     left: var(--message-left);
-
-    transform: translateX(-50%);
 }
 
 #hud {
