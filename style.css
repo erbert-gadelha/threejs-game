@@ -1,5 +1,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Press+Start+2P&display=swap');
 
+:root {
+    --message-top: 300px;
+    --message-left: 300px;
+}
+
 
 * {
     margin: 0;
@@ -12,6 +17,32 @@
 
 body { margin: 0; overflow: hidden; }
 canvas { display: block; }
+
+.player-names {
+    pointer-events: none;
+}
+.player-name {
+    color: white;
+    font-size: .64rem;
+    background-color: rgba(0, 0, 0, 0.5);
+    padding: 4px 8px;
+    border-radius: 5px;
+
+}
+
+#message {
+    font-size: 1rem;
+    position: fixed;
+    width: fit-content;
+    height: fit-content;
+    padding: 4px 8px;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    top: var(--message-top);
+    left: var(--message-left);
+
+    transform: translateX(-50%);
+}
 
 #hud {
         
