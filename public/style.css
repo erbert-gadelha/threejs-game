@@ -70,41 +70,79 @@ canvas { display: block; }
 @keyframes messageFadeOut {
     0% {
         opacity: 0;
-        /*transform: scaleY(0);*/
     } 3%, 97% {
         opacity: 1;
-        /*transform: scaleY(1);*/
     } 100% {
         opacity: 0;
-        /*transform: scaleY(0);*/
     }
 }
 
 .player-name {
+    pointer-events: all;
+    position: relative;
+    position: static;
+
+    font-family: "Lexend", serif;
+    font-style: normal;
     color: white;
+    
     font-size: .64rem;
     background-color: rgba(0, 0, 0, 0.5);
     padding: 4px 8px;
     border-radius: 5px;
-    pointer-events: all;
-    cursor: pointer;
+    width: fit-content;
 
-    font-family: "Lexend", serif;
-    font-optical-sizing: auto;
-    font-style: normal;
+    cursor: pointer;
 
     input {
         font-family: "Lexend", serif;
         font-optical-sizing: auto;
         font-style: normal;
-        background-color: transparent;
-        border: none;
         width: auto;
         min-width: 20px;
         border: none;
         outline: none;
+
+        background-color: transparent;
+
         font-size: .8rem;
         color: rgb(255, 206, 116);
+    }
+
+
+    div {
+        position: absolute;
+        display: flex;
+        flex-direction: column;
+        bottom: 100%;
+        left: 50%;
+        margin-bottom: 2px;
+        gap: 2px;
+        max-width: 500px;
+        width: max-content;
+        justify-content: center;
+        align-items: center;
+        min-width: 100%;
+        width: max-content;
+        transform: translateX(-50%);
+        height: fit-content;
+
+
+        span {
+            font-family: "Lexend", serif;
+            font-optical-sizing: auto;
+            font-style: normal;
+            color: white;
+            pointer-events: none;
+            position: static;
+            font-size: .64rem;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 4px 8px;
+            border-radius: 5px;
+            width: max-content;
+
+            animation: messageFadeOut 5s linear forwards;
+        }
     }
 
 }

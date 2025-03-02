@@ -38,6 +38,14 @@ export class Connection {
     private onServerMessage(message:object) {
         this.isConnected = true;
         this.messageQueue.forEach((message:string) => this.send(message));
+
+        setTimeout(()=> {
+
+            this.send({
+                action: 'MESSAGE',
+                content: `Olá, meu id é (${this.ID})!`
+            })
+        }, 500)
     }
 
 

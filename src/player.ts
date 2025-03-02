@@ -230,15 +230,16 @@ export default class Player {
         const nameDiv = document.createElement("div");
         const nameLabel = new CSS2DObject(nameDiv);
 
+        const div = document.createElement('div');
+        nameDiv.append(div);
+
+
 
         if(text) {
-            const div = document.createElement('div');
-            nameDiv.append(div);
             nameLabel.position.set(0, 3, 0);
             nameDiv.className = "enemy-name";
         } else {
             nameDiv.className = "player-name";
-            console.log("ELSE");
             const span = document.createElement("span");
             span.textContent = '…';
             const input = document.createElement("input");
@@ -270,6 +271,11 @@ export default class Player {
                         action:'MESSAGE',
                         content:value,
                     });
+                    const newMessage = document.createElement("span");
+                    newMessage.textContent = value;
+                    div.append(newMessage);
+
+                    setTimeout(() => div.removeChild(newMessage), 5000);
                 }
             })
             nameDiv.addEventListener('click', () => focusOn(true))
